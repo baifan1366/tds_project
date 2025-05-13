@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ctime>
 
 using namespace std;
 // Food item structure for restaurant inventory
@@ -16,6 +17,19 @@ struct FoodItem {
         name = "";
         category = "";
         receiveDate = "";
+    }
+    
+    // Parameterized constructor
+    FoodItem(const string& _id, const string& _name, double _price, const string& _category, int _quantity = 0) 
+        : id(_id), name(_name), price(_price), category(_category), quantity(_quantity) {
+        // Set receive date to current time
+        time_t now = time(0);
+        string dateStr = ctime(&now);
+        // Remove the newline character from ctime output
+        if (!dateStr.empty() && dateStr[dateStr.length()-1] == '\n') {
+            dateStr.erase(dateStr.length()-1);
+        }
+        receiveDate = dateStr;
     }
 };
 
@@ -37,6 +51,70 @@ struct MenuItem {
         name = "";
         description = "";
         category = "";
+    }
+    
+    // Parameterized constructor - creates menu item with basic information
+    MenuItem(const string& _id, const string& _name, double _price, 
+             const string& _description, const string& _category)
+        : id(_id), name(_name), price(_price), description(_description), 
+          category(_category), ingredientCount(0), ingredients(nullptr) {}
+          
+    // Copy constructor - performs deep copy of other MenuItem including ingredients
+    MenuItem(const MenuItem& other) 
+        : id(other.id), name(other.name), price(other.price), 
+          description(other.description), category(other.category),
+          ingredientCount(other.ingredientCount) {
+        
+        // Deep copy of ingredients array
+        if (other.ingredientCount > 0 && other.ingredients != nullptr) {
+            ingredients = new string[other.ingredientCount];
+            for (int i = 0; i < other.ingredientCount; i++) {
+                ingredients[i] = other.ingredients[i];
+            }
+        } else {
+            ingredients = nullptr;
+        }
+    }
+    
+     // Assignment operator - handles proper deep copy during assignment
+    MenuItem& operator=(const MenuItem& other) {
+        // Self-assignment check to prevent issues
+        if (this == &other) {
+            return *this;
+        }
+        
+        // Copy basic properties
+        id = other.id;
+        name = other.name;
+        price = other.price;
+        description = other.description;
+        category = other.category;
+        
+        // Clean up existing ingredients to prevent memory leaks
+        if (ingredients != nullptr) {
+            delete[] ingredients;
+            ingredients = nullptr;
+        }
+        
+        ingredientCount = other.ingredientCount;
+        
+        // Deep copy the ingredients array
+        if (other.ingredientCount > 0 && other.ingredients != nullptr) {
+            ingredients = new string[other.ingredientCount];
+            for (int i = 0; i < other.ingredientCount; i++) {
+                ingredients[i] = other.ingredients[i];
+            }
+        }
+        
+        return *this;
+    }
+    
+    // Destructor - ensures proper cleanup of dynamically allocated memory
+    ~MenuItem() {
+        if (ingredients != nullptr) {
+            delete[] ingredients;
+            ingredients = nullptr;
+        }
     }
 };
 
