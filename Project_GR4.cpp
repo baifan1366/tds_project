@@ -128,6 +128,74 @@ struct MenuNode {
     MenuNode(const MenuItem& item) : data(item), next(nullptr) {}
 };
 
+// Singly Linked List for menu items
+// Implements a dynamic list structure for storing and managing menu items
+class ADTLinkedList {
+private:
+    MenuNode* head;      // Pointer to the first node in the list
+    MenuNode* tail;      // Pointer to the last node in the list (for efficient append)
+    int size;            // Current number of elements in the list
+
+public:
+    // Constructor - initializes an empty linked list
+    ADTLinkedList() : head(nullptr), tail(nullptr), size(0) {}
+    
+    // Destructor - cleans up all dynamically allocated nodes to prevent memory leaks
+    ~ADTLinkedList() {
+        MenuNode* current = head;
+        while (current != nullptr) {
+            MenuNode* next = current->next;
+            delete current;
+            current = next;
+        }
+        head = nullptr;
+        tail = nullptr;
+    }
+    
+    // Returns the current number of elements in the list
+    int getSize() const {
+        return size;
+    }
+    
+    // Checks if the list contains no elements
+    bool isEmpty() const {
+        return head == nullptr;
+    }
+    
+    // Adds a new menu item to the end of the list in O(1) time
+    // Uses the tail pointer for efficient append operations
+    void append(const MenuItem& item) {
+        MenuNode* newNode = new MenuNode(item);
+        
+        if (head == nullptr) {
+            // List is empty, set both head and tail to the new node
+            head = tail = newNode;
+        } else {
+            // List has elements, append to the end
+            tail->next = newNode;
+            tail = newNode;
+        }
+        
+        size++;
+    }
+    
+    // Adds a new menu item to the beginning of the list in O(1) time
+    void prepend(const MenuItem& item) {
+        MenuNode* newNode = new MenuNode(item);
+        
+        if (head == nullptr) {
+            // List is empty, set both head and tail to the new node
+            head = tail = newNode;
+        } else {
+            // List has elements, prepend to the beginning
+            newNode->next = head;
+            head = newNode;
+        }
+        
+        size++;
+    }
+};
+
 class RestaurantMenuSystem {
     private:
         ADTLinkedList menuList;  // Linked list to store menu items
