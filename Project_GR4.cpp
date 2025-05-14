@@ -40,21 +40,32 @@ struct MenuItem {
     }
 };
 
+// Node structure for menu linked list
+// Used as building blocks for the ADTLinkedList class
+struct MenuNode {
+    MenuItem data;       // The menu item stored in this node
+    MenuNode* next;      // Pointer to the next node in the list
+    
+    // Constructor initializes node with a menu item and null next pointer
+    MenuNode(const MenuItem& item) : data(item), next(nullptr) {}
+};
+
+class RestaurantMenuSystem {
+    private:
+        ADTLinkedList menuList;  // Linked list to store menu items
+        int itemCount;           // Total number of menu items
+
+    public:
+        // Constructor - initializes an empty menu system
+        RestaurantMenuSystem() : itemCount(0) {}
+        
+        // Destructor - linked list handles its own memory cleanup
+        ~RestaurantMenuSystem() {}
+};
+
 int main()
 {
     return 0;
 }
 
-class RestaurantMenuSystem {
-private:
-    ADTLinkedList menuList;  // Linked list to store menu items
-    int itemCount;           // Total number of menu items
 
-public:
-    // Constructor - initializes an empty menu system
-    RestaurantMenuSystem() : itemCount(0) {}
-    
-    // Destructor - linked list handles its own memory cleanup
-    ~RestaurantMenuSystem() {}
-
-};
