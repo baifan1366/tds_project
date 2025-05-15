@@ -280,6 +280,16 @@ public:
     
 };
 
+// Node structure for linked queue
+// Basic building block for the ADTLinkedQueue class
+struct Node {
+    FoodItem data;      // The food item stored in this node
+    Node* next;         // Pointer to the next node in the queue
+    
+    // Constructor initializes node with a food item and null next pointer
+    Node(const FoodItem& item) : data(item), next(nullptr) {}
+};
+
 class RestaurantMenuSystem {
     private:
         ADTLinkedList menuList;  // Linked list to store menu items
