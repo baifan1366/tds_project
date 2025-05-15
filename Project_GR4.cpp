@@ -128,7 +128,8 @@ struct MenuNode {
     MenuNode(const MenuItem& item) : data(item), next(nullptr) {}
 };
 
-
+// Singly Linked List for menu items
+// Implements a dynamic list structure for storing and managing menu items
 class ADTLinkedList {
 private:
     MenuNode* head;      // Pointer to the first node in the list
@@ -278,7 +279,6 @@ public:
     
     
 };
-
 
 class RestaurantMenuSystem {
     private:
