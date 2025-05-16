@@ -290,6 +290,97 @@ struct Node {
     Node(const FoodItem& item) : data(item), next(nullptr) {}
 };
 
+// Linked Queue for processing inventory items with FIFO order
+// Implements a First-In-First-Out (FIFO) structure for food items
+class ADTLinkedQueue {
+private:
+    Node *front, *rear;  // Pointers to the front and rear of the queue
+    int size;            // Current number of elements in the queue
+
+public:
+    // Constructor - initializes an empty queue
+    ADTLinkedQueue() : front(nullptr), rear(nullptr), size(0) {}
+    
+    // Copy constructor - performs deep copy of another queue
+    ADTLinkedQueue(const ADTLinkedQueue& other) : front(nullptr), rear(nullptr), size(0) {
+        // Copy nodes from other queue in order
+        Node* current = other.front;
+        while (current != nullptr) {
+            enqueue(current->data);
+            current = current->next;
+        }
+    }
+    
+    // Destructor - cleans up all nodes to prevent memory leaks
+    ~ADTLinkedQueue() {
+        while (!isEmpty()) {
+            dequeue();
+        }
+    }
+    
+    // Checks if the queue is empty (contains no elements)
+    bool isEmpty() const {
+        return front == nullptr;
+    }
+    
+    // Returns the current number of elements in the queue
+    int getSize() const {
+        return size;
+    }
+    
+    // Adds a new food item to the end of the queue
+    // Time complexity: O(1)
+    void enqueue(const FoodItem& item) {
+        Node* newNode = new Node(item);
+        
+        if (rear == nullptr) {
+            // Queue is empty, set both front and rear to the new node
+            front = rear = newNode;
+        } else {
+            // Queue has elements, add to the end
+            rear->next = newNode;
+            rear = newNode;
+        }
+        
+        size++;
+    }
+    
+    // Removes and returns the food item from the front of the queue
+    // Returns an empty FoodItem if the queue is empty
+    // Time complexity: O(1)
+    FoodItem dequeue() {
+        FoodItem item;
+        
+        if (!isEmpty()) {
+            Node* temp = front;
+            item = temp->data;
+            
+            // Move front pointer to the next node
+            front = front->next;
+            
+            // If queue becomes empty, update rear pointer
+            if (front == nullptr) {
+                rear = nullptr;
+            }
+            
+            // Free memory and update size
+            delete temp;
+            size--;
+        }
+        
+        return item;
+    }
+    
+    // Returns the food item at the front without removing it
+    // Returns an empty FoodItem if the queue is empty
+    FoodItem peek() const {
+        if (!isEmpty()) {
+            return front->data;
+        }
+        return FoodItem(); // Return empty item if queue is empty
+    }
+};
+
 class RestaurantMenuSystem {
     private:
         ADTLinkedList menuList;  // Linked list to store menu items
