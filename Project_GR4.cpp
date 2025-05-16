@@ -277,6 +277,42 @@ public:
         return true;
     }
     
+    // Searches for a menu item by ID and returns a copy if found
+    MenuItem* findById(const string& id) const {
+        MenuNode* current = head;
+        
+        // Traverse the list looking for matching ID
+        while (current != nullptr) {
+            if (current->data.id == id) {
+                return new MenuItem(current->data);
+            }
+            current = current->next;
+        }
+        
+        return nullptr; // Item not found
+    }
+
+    // Creates a dynamically allocated array containing all menu items
+    MenuItem* toArray() const {
+        if (isEmpty()) {
+            return nullptr;
+        }
+        
+        // Allocate an array of the exact size needed
+        MenuItem* items = new MenuItem[size];
+        MenuNode* current = head;
+        int index = 0;
+        
+        // Copy each menu item into the array
+        while (current != nullptr) {
+            items[index++] = current->data;
+            current = current->next;
+        }
+        
+        return items;
+    }
+
+
     
 };
 
