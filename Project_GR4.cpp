@@ -417,6 +417,37 @@ public:
     }
 };
 
+class RestaurantInventorySystem {
+private:
+    // In practice it always turns out that it is better to have an index range that is a prime number.
+    // This way you do not get so many COLLISIONS.
+    static const int TABLE_SIZE = 101; // Prime number for better hash distribution
+    ADTLinkedQueue* hashTable;            // Array of linked queues (buckets)
+    int itemCount;
+
+public:
+    // Make TABLE_SIZE accessible publicly
+    static const int MAX_BUCKETS = 101; // Prime number Same as TABLE_SIZE
+    
+    // Static utility methods
+    // Clearscreen function
+    static void clearScreen() {
+        system("cls");
+    }
+    
+    // Print header for display
+    static void printHeader(const string& title) {
+        cout << "\n" << string(100, '=') << endl;
+        cout << string(35, ' ') << title << endl;
+        cout << string(100, '=') << endl;
+    }
+    
+    // Print footer for display
+    static void printFooter() {
+        cout << string(100, '-') << endl;
+    }
+};
+
 class RestaurantMenuSystem {
     private:
         ADTLinkedList menuList;  // Linked list to store menu items
