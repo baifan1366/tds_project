@@ -311,9 +311,6 @@ public:
         
         return items;
     }
-
-
-    
 };
 
 // Node structure for linked queue
@@ -471,6 +468,68 @@ public:
     // Print footer for display
     static void printFooter() {
         cout << string(100, '-') << endl;
+    }
+        
+    // Merge function (part of Tim Sort)
+    // Merges two sorted subarrays into one sorted array
+    // Parameters: array, left boundary, middle point, right boundary, and sort criteria
+    static void merge(FoodItem arr[], int left, int mid, int right, bool byName) {
+        int len1 = mid - left + 1;
+        int len2 = right - mid;
+        
+        // Create temporary arrays to hold the two subarrays
+        FoodItem* leftArr = new FoodItem[len1];
+        FoodItem* rightArr = new FoodItem[len2];
+        
+        // Copy data to temporary arrays
+        for (int i = 0; i < len1; i++)
+            leftArr[i] = arr[left + i];
+        for (int i = 0; i < len2; i++)
+            rightArr[i] = arr[mid + 1 + i];
+        
+        // Merge the temporary arrays back into the original array
+        int i = 0, j = 0, k = left;
+        
+        while (i < len1 && j < len2) {
+            if (byName) {
+                // Sort by name (alphabetical order)
+                if (leftArr[i].name <= rightArr[j].name) {
+                    arr[k] = leftArr[i];
+                    i++;
+                } else {
+                    arr[k] = rightArr[j];
+                    j++;
+                }
+            } else {
+                // Sort by quantity (numerical order)
+                if (leftArr[i].quantity <= rightArr[j].quantity) {
+                    arr[k] = leftArr[i];
+                    i++;
+                } else {
+                    arr[k] = rightArr[j];
+                    j++;
+                }
+            }
+            k++;
+        }
+        
+        // Copy any remaining elements from the left subarray
+        while (i < len1) {
+            arr[k] = leftArr[i];
+            i++;
+            k++;
+        }
+        
+        // Copy any remaining elements from the right subarray
+        while (j < len2) {
+            arr[k] = rightArr[j];
+            j++;
+            k++;
+        }
+        
+        // Free allocated memory for temporary arrays
+        delete[] leftArr;
+        delete[] rightArr;
     }
 };
 
