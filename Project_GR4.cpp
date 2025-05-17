@@ -417,6 +417,10 @@ public:
     }
 };
 
+// Universal Hash Function constants
+const int PRIME = 31;
+const int MAX_HASH_KEY = 101; // Prime number for hash table size
+
 class RestaurantInventorySystem {
 private:
     // In practice it always turns out that it is better to have an index range that is a prime number.
@@ -425,6 +429,28 @@ private:
     ADTLinkedQueue* hashTable;            // Array of linked queues (buckets)
     int itemCount;
 
+        // Universal hash function for strings
+    // Implements a polynomial rolling hash
+    int universalHash(const string& key) {
+        unsigned long hash = 0;
+        int length = key.length();
+        
+        // Universal hash function: h(k) = ((a*k + b) mod p) mod m
+        // hash = ((hash * PRIME + key[i]) % MAX_HASH_KEY) % TABLE_SIZE;
+        // Using polynomial rolling hash: h(k) = sum(k[i]*PRIME^(n-i-1)) mod TABLE_SIZE
+        for (int i = 0; i < length; i++) {
+            hash = (hash * PRIME + key[i]) % MAX_HASH_KEY;
+        }
+        
+        return hash % TABLE_SIZE;
+    }
+    
+    // Quadratic probing function for collision resolution
+    int quadraticProbing(int hashValue, int attempt) {
+        // Quadratic probing formula: h'(k, i) = (h(k) + c1*i + c2*i^2) mod TABLE_SIZE
+        // Using c1=0, c2=1: h'(k, i) = (h(k) + i^2) mod TABLE_SIZE
+        return (hashValue + attempt * attempt) % TABLE_SIZE;
+    }
 public:
     // Make TABLE_SIZE accessible publicly
     static const int MAX_BUCKETS = 101; // Prime number Same as TABLE_SIZE
