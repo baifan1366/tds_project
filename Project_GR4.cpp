@@ -531,6 +531,36 @@ public:
         delete[] leftArr;
         delete[] rightArr;
     }
+
+    // Insertion sort (part of Tim Sort)
+    // Efficiently sorts small subarrays using in-place insertion sort
+    // Parameters: array, left boundary, right boundary, and sort criteria
+    static void insertionSort(FoodItem arr[], int left, int right, bool byName) {
+        for (int i = left + 1; i <= right; i++) {
+            // Store current element as temporary
+            FoodItem temp = arr[i];
+            int j = i - 1;
+            
+            if (byName) {
+                // Sort by name (alphabetical order)
+                // Move elements greater than temp to one position ahead
+                while (j >= left && arr[j].name > temp.name) {
+                    arr[j + 1] = arr[j];
+                    j--;
+                }
+            } else {
+                // Sort by quantity (numerical order)
+                // Move elements greater than temp to one position ahead
+                while (j >= left && arr[j].quantity > temp.quantity) {
+                    arr[j + 1] = arr[j];
+                    j--;
+                }
+            }
+            
+            // Place temp in its correct position
+            arr[j + 1] = temp;
+        }
+    }
 };
 
 class RestaurantMenuSystem {
