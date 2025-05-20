@@ -412,6 +412,52 @@ public:
         }
         return FoodItem(); // Return empty item if queue is empty
     }
+
+    // Creates a dynamically allocated array containing all food items in the queue
+    // Returns nullptr if the queue is empty
+    // Caller is responsible for deleting the returned array
+    FoodItem* toArray() const {
+        if (isEmpty()) {
+            return nullptr;
+        }
+        
+        // Allocate an array of the exact size needed
+        FoodItem* items = nullptr;
+        items = new FoodItem[size];
+        Node* current = front;
+        int index = 0;
+        
+        // Copy each food item into the array in queue order
+        while (current != nullptr) {
+            items[index++] = current->data;
+            current = current->next;
+        }
+        
+        return items;
+    }
+    
+    // Assignment operator - performs deep copy of another queue
+    // Properly handles self-assignment and memory management
+    ADTLinkedQueue& operator=(const ADTLinkedQueue& other) {
+        // Self-assignment check to prevent issues
+        if (this == &other) {
+            return *this; // if same then return same
+        }
+        
+        // Clear current queue contents
+        while (!isEmpty()) {
+            dequeue();
+        }
+        
+        // Copy nodes from other queue in order
+        Node* current = other.front;
+        while (current != nullptr) {
+            enqueue(current->data);
+            current = current->next;
+        }
+        
+        return *this;
+    }
 };
 
 // Universal Hash Function constants
