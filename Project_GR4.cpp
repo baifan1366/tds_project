@@ -311,6 +311,8 @@ public:
         
         return items;
     }
+
+
 };
 
 // Node structure for linked queue
@@ -323,302 +325,69 @@ struct Node {
     Node(const FoodItem& item) : data(item), next(nullptr) {}
 };
 
-// Linked Queue for processing inventory items with FIFO order
-// Implements a First-In-First-Out (FIFO) structure for food items
-class ADTLinkedQueue {
-private:
-    Node *front, *rear;  // Pointers to the front and rear of the queue
-    int size;            // Current number of elements in the queue
-
-public:
-    // Constructor - initializes an empty queue
-    ADTLinkedQueue() : front(nullptr), rear(nullptr), size(0) {}
+// Merge function (part of Tim Sort) for MenuItem objects
+void mergeMenuItems(MenuItem arr[], int left, int mid, int right, const string& sortBy = "name") {
+    int len1 = mid - left + 1;
+    int len2 = right - mid;
     
-    // Copy constructor - performs deep copy of another queue
-    ADTLinkedQueue(const ADTLinkedQueue& other) : front(nullptr), rear(nullptr), size(0) {
-        // Copy nodes from other queue in order
-        Node* current = other.front;
-        while (current != nullptr) {
-            enqueue(current->data);
-            current = current->next;
-        }
-    }
+    // Create temporary arrays to hold the two subarrays
+    MenuItem* leftArr = new MenuItem[len1];
+    MenuItem* rightArr = new MenuItem[len2];
     
-    // Destructor - cleans up all nodes to prevent memory leaks
-    ~ADTLinkedQueue() {
-        while (!isEmpty()) {
-            dequeue();
-        }
-    }
+    // Copy data to temporary arrays
+    for (int i = 0; i < len1; i++)
+        leftArr[i] = arr[left + i];
+    for (int i = 0; i < len2; i++)
+        rightArr[i] = arr[mid + 1 + i];
     
-    // Checks if the queue is empty (contains no elements)
-    bool isEmpty() const {
-        return front == nullptr;
-    }
+    // Merge the temporary arrays back into the original array
+    int i = 0, j = 0, k = left;
     
-    // Returns the current number of elements in the queue
-    int getSize() const {
-        return size;
-    }
-    
-    // Adds a new food item to the end of the queue
-    // Time complexity: O(1)
-    void enqueue(const FoodItem& item) {
-        Node* newNode = new Node(item);
+    while (i < len1 && j < len2) {
+        bool compareResult = false;
         
-        if (rear == nullptr) {
-            // Queue is empty, set both front and rear to the new node
-            front = rear = newNode;
-        } else {
-            // Queue has elements, add to the end
-            rear->next = newNode;
-            rear = newNode;
+        // Compare based on the sort criteria
+        if (sortBy == "price") {
+            // Sort by price (ascending order)
+            compareResult = (leftArr[i].price <= rightArr[j].price);
+        } 
+        else if (sortBy == "category") {
+            // Sort by category (alphabetical order)
+            compareResult = (leftArr[i].category <= rightArr[j].category);
+        }
+        else {
+            // Default: Sort by name (alphabetical order)
+            compareResult = (leftArr[i].name <= rightArr[j].name);
         }
         
-        size++;
-    }
-    
-    // Removes and returns the food item from the front of the queue
-    // Returns an empty FoodItem if the queue is empty
-    // Time complexity: O(1)
-    FoodItem dequeue() {
-        FoodItem item;
-        
-        if (!isEmpty()) {
-            Node* temp = front;
-            item = temp->data;
-            
-            // Move front pointer to the next node
-            front = front->next;
-            
-            // If queue becomes empty, update rear pointer
-            if (front == nullptr) {
-                rear = nullptr;
-            }
-            
-            // Free memory and update size
-            delete temp;
-            size--;
-        }
-        
-        return item;
-    }
-    
-    // Returns the food item at the front without removing it
-    // Returns an empty FoodItem if the queue is empty
-    FoodItem peek() const {
-        if (!isEmpty()) {
-            return front->data;
-        }
-        return FoodItem(); // Return empty item if queue is empty
-    }
-
-    // Creates a dynamically allocated array containing all food items in the queue
-    // Returns nullptr if the queue is empty
-    // Caller is responsible for deleting the returned array
-    FoodItem* toArray() const {
-        if (isEmpty()) {
-            return nullptr;
-        }
-        
-        // Allocate an array of the exact size needed
-        FoodItem* items = nullptr;
-        items = new FoodItem[size];
-        Node* current = front;
-        int index = 0;
-        
-        // Copy each food item into the array in queue order
-        while (current != nullptr) {
-            items[index++] = current->data;
-            current = current->next;
-        }
-        
-        return items;
-    }
-    
-    // Assignment operator - performs deep copy of another queue
-    // Properly handles self-assignment and memory management
-    ADTLinkedQueue& operator=(const ADTLinkedQueue& other) {
-        // Self-assignment check to prevent issues
-        if (this == &other) {
-            return *this; // if same then return same
-        }
-        
-        // Clear current queue contents
-        while (!isEmpty()) {
-            dequeue();
-        }
-        
-        // Copy nodes from other queue in order
-        Node* current = other.front;
-        while (current != nullptr) {
-            enqueue(current->data);
-            current = current->next;
-        }
-        
-        return *this;
-    }
-};
-
-// Universal Hash Function constants
-const int PRIME = 31;
-const int MAX_HASH_KEY = 101; // Prime number for hash table size
-
-class RestaurantInventorySystem {
-private:
-    // In practice it always turns out that it is better to have an index range that is a prime number.
-    // This way you do not get so many COLLISIONS.
-    static const int TABLE_SIZE = 101; // Prime number for better hash distribution
-    ADTLinkedQueue* hashTable;            // Array of linked queues (buckets)
-    int itemCount;
-
-        // Universal hash function for strings
-    // Implements a polynomial rolling hash
-    int universalHash(const string& key) {
-        unsigned long hash = 0;
-        int length = key.length();
-        
-        // Universal hash function: h(k) = ((a*k + b) mod p) mod m
-        // hash = ((hash * PRIME + key[i]) % MAX_HASH_KEY) % TABLE_SIZE;
-        // Using polynomial rolling hash: h(k) = sum(k[i]*PRIME^(n-i-1)) mod TABLE_SIZE
-        for (int i = 0; i < length; i++) {
-            hash = (hash * PRIME + key[i]) % MAX_HASH_KEY;
-        }
-        
-        return hash % TABLE_SIZE;
-    }
-    
-    // Quadratic probing function for collision resolution
-    int quadraticProbing(int hashValue, int attempt) {
-        // Quadratic probing formula: h'(k, i) = (h(k) + c1*i + c2*i^2) mod TABLE_SIZE
-        // Using c1=0, c2=1: h'(k, i) = (h(k) + i^2) mod TABLE_SIZE
-        return (hashValue + attempt * attempt) % TABLE_SIZE;
-    }
-public:
-    // Make TABLE_SIZE accessible publicly
-    static const int MAX_BUCKETS = 101; // Prime number Same as TABLE_SIZE
-    
-    // Static utility methods
-    // Clearscreen function
-    static void clearScreen() {
-        system("cls");
-    }
-    
-    // Print header for display
-    static void printHeader(const string& title) {
-        cout << "\n" << string(100, '=') << endl;
-        cout << string(35, ' ') << title << endl;
-        cout << string(100, '=') << endl;
-    }
-    
-    // Print footer for display
-    static void printFooter() {
-        cout << string(100, '-') << endl;
-    }
-        
-    // Merge function (part of Tim Sort)
-    // Merges two sorted subarrays into one sorted array
-    // Parameters: array, left boundary, middle point, right boundary, and sort criteria
-    static void merge(FoodItem arr[], int left, int mid, int right, bool byName) {
-        int len1 = mid - left + 1;
-        int len2 = right - mid;
-        
-        // Create temporary arrays to hold the two subarrays
-        FoodItem* leftArr = new FoodItem[len1];
-        FoodItem* rightArr = new FoodItem[len2];
-        
-        // Copy data to temporary arrays
-        for (int i = 0; i < len1; i++)
-            leftArr[i] = arr[left + i];
-        for (int i = 0; i < len2; i++)
-            rightArr[i] = arr[mid + 1 + i];
-        
-        // Merge the temporary arrays back into the original array
-        int i = 0, j = 0, k = left;
-        
-        while (i < len1 && j < len2) {
-            if (byName) {
-                // Sort by name (alphabetical order)
-                if (leftArr[i].name <= rightArr[j].name) {
-                    arr[k] = leftArr[i];
-                    i++;
-                } else {
-                    arr[k] = rightArr[j];
-                    j++;
-                }
-            } else {
-                // Sort by quantity (numerical order)
-                if (leftArr[i].quantity <= rightArr[j].quantity) {
-                    arr[k] = leftArr[i];
-                    i++;
-                } else {
-                    arr[k] = rightArr[j];
-                    j++;
-                }
-            }
-            k++;
-        }
-        
-        // Copy any remaining elements from the left subarray
-        while (i < len1) {
+        if (compareResult) {
             arr[k] = leftArr[i];
             i++;
-            k++;
-        }
-        
-        // Copy any remaining elements from the right subarray
-        while (j < len2) {
+        } else {
             arr[k] = rightArr[j];
             j++;
-            k++;
         }
-        
-        // Free allocated memory for temporary arrays
-        delete[] leftArr;
-        delete[] rightArr;
-    }
-
-    // Insertion sort (part of Tim Sort)
-    // Efficiently sorts small subarrays using in-place insertion sort
-    // Parameters: array, left boundary, right boundary, and sort criteria
-    static void insertionSort(FoodItem arr[], int left, int right, bool byName) {
-        for (int i = left + 1; i <= right; i++) {
-            // Store current element as temporary
-            FoodItem temp = arr[i];
-            int j = i - 1;
-            
-            if (byName) {
-                // Sort by name (alphabetical order)
-                // Move elements greater than temp to one position ahead
-                while (j >= left && arr[j].name > temp.name) {
-                    arr[j + 1] = arr[j];
-                    j--;
-                }
-            } else {
-                // Sort by quantity (numerical order)
-                // Move elements greater than temp to one position ahead
-                while (j >= left && arr[j].quantity > temp.quantity) {
-                    arr[j + 1] = arr[j];
-                    j--;
-                }
-            }
-            
-            // Place temp in its correct position
-            arr[j + 1] = temp;
-        }
+        k++;
     }
     
-    // Constructor - initializes the hash table for storing food items
-    // Creates an array of empty linked queues (buckets)
-    RestaurantInventorySystem() : itemCount(0) {
-        hashTable = new ADTLinkedQueue[TABLE_SIZE];
+    // Copy any remaining elements from the left subarray
+    while (i < len1) {
+        arr[k] = leftArr[i];
+        i++;
+        k++;
     }
     
-    // Destructor - frees all memory allocated for the hash table
-    ~RestaurantInventorySystem() {
-        delete[] hashTable;
+    // Copy any remaining elements from the right subarray
+    while (j < len2) {
+        arr[k] = rightArr[j];
+        j++;
+        k++;
     }
-};
+    
+    // Free allocated memory for temporary arrays
+    delete[] leftArr;
+    delete[] rightArr;
+}
 
 // Utility sorting and searching functions for restaurant menu system
 
