@@ -607,6 +607,17 @@ public:
             arr[j + 1] = temp;
         }
     }
+    
+    // Constructor - initializes the hash table for storing food items
+    // Creates an array of empty linked queues (buckets)
+    RestaurantInventorySystem() : itemCount(0) {
+        hashTable = new ADTLinkedQueue[TABLE_SIZE];
+    }
+    
+    // Destructor - frees all memory allocated for the hash table
+    ~RestaurantInventorySystem() {
+        delete[] hashTable;
+    }
 };
 
 class RestaurantMenuSystem {
