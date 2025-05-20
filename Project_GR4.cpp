@@ -389,6 +389,74 @@ void mergeMenuItems(MenuItem arr[], int left, int mid, int right, const string& 
     delete[] rightArr;
 }
 
+// Utility sorting and searching functions for restaurant menu system
+
+// Merge function (part of Tim Sort) for MenuItem objects
+// Merges two sorted subarrays into one sorted array
+// Parameters: array, left boundary, middle point, right boundary, sort criteria (name, price, or category)
+void mergeMenuItems(MenuItem arr[], int left, int mid, int right, const string& sortBy = "name") {
+    int len1 = mid - left + 1;
+    int len2 = right - mid;
+    
+    // Create temporary arrays to hold the two subarrays
+    MenuItem* leftArr = new MenuItem[len1];
+    MenuItem* rightArr = new MenuItem[len2];
+    
+    // Copy data to temporary arrays
+    for (int i = 0; i < len1; i++)
+        leftArr[i] = arr[left + i];
+    for (int i = 0; i < len2; i++)
+        rightArr[i] = arr[mid + 1 + i];
+    
+    // Merge the temporary arrays back into the original array
+    int i = 0, j = 0, k = left;
+    
+    while (i < len1 && j < len2) {
+        bool compareResult = false;
+        
+        // Compare based on the sort criteria
+        if (sortBy == "price") {
+            // Sort by price (ascending order)
+            compareResult = (leftArr[i].price <= rightArr[j].price);
+        } 
+        else if (sortBy == "category") {
+            // Sort by category (alphabetical order)
+            compareResult = (leftArr[i].category <= rightArr[j].category);
+        }
+        else {
+            // Default: Sort by name (alphabetical order)
+            compareResult = (leftArr[i].name <= rightArr[j].name);
+        }
+        
+        if (compareResult) {
+            arr[k] = leftArr[i];
+            i++;
+        } else {
+            arr[k] = rightArr[j];
+            j++;
+        }
+        k++;
+    }
+    
+    // Copy any remaining elements from the left subarray
+    while (i < len1) {
+        arr[k] = leftArr[i];
+        i++;
+        k++;
+    }
+    
+    // Copy any remaining elements from the right subarray
+    while (j < len2) {
+        arr[k] = rightArr[j];
+        j++;
+        k++;
+    }
+    
+    // Free allocated memory for temporary arrays
+    delete[] leftArr;
+    delete[] rightArr;
+}
+
 class RestaurantMenuSystem {
     private:
         ADTLinkedList menuList;  // Linked list to store menu items
