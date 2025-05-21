@@ -607,6 +607,36 @@ public:
             arr[j + 1] = temp;
         }
     }
+
+    // Tim Sort main function
+    // A hybrid sorting algorithm combining insertion sort and merge sort
+    // Average time complexity: O(n log n)
+    static void timSort(FoodItem arr[], int n, bool byName = true) {
+        // Run size for insertion sort (optimal value based on typical array sizes)
+        const int RUN = 32;
+        
+        // First, sort individual subarrays of size RUN using insertion sort
+        // This is efficient for small arrays and creates sorted runs
+        for (int i = 0; i < n; i += RUN) {
+            insertionSort(arr, i, min(i + RUN - 1, n - 1), byName);
+        }
+        
+        // Start merging sorted runs from size RUN
+        // Each iteration doubles the size of subarrays being merged
+        for (int size = RUN; size < n; size = 2 * size) {
+            // Pick starting points of different subarrays of current size
+            for (int left = 0; left < n; left += 2 * size) {
+                // Find ending points of subarrays
+                int mid = left + size - 1;
+                int right = min(left + 2 * size - 1, n - 1);
+                
+                // Merge subarrays arr[left...mid] and arr[mid+1...right]
+                if (mid < right) {
+                    merge(arr, left, mid, right, byName);
+                }
+            }
+        }
+    }
     
     // Constructor - initializes the hash table for storing food items
     // Creates an array of empty linked queues (buckets)
