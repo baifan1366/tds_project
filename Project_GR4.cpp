@@ -648,6 +648,51 @@ public:
     ~RestaurantInventorySystem() {
         delete[] hashTable;
     }
+
+    // Saves all food items in the inventory to a CSV file
+    // Optional sorting by name can be applied before saving
+    bool saveToFile(const string& filename, bool sorted = false) {
+        ofstream file(filename);
+        if (!file.is_open()) {
+            cout << "Error: Could not open file " << filename << " for writing" << endl;
+            return false;
+        }
+        
+        // Get all food items as an array
+        FoodItem* items = getAllItems();
+        
+        // Check if items were properly allocated
+        if (items == nullptr && itemCount > 0) {
+            cout << "Error: Failed to allocate memory for food items." << endl;
+            file.close();
+            return false;
+        }
+        
+        // Sort items if requested
+        if (sorted && itemCount > 0 && items != nullptr) {
+            timSort(items, itemCount, true); // Sort by name
+        }
+        
+        // Write to file
+        if (itemCount > 0 && items != nullptr) {
+            for (int i = 0; i < itemCount; i++) {
+                file << items[i].id << ","
+                     << items[i].name << ","
+                     << items[i].price << ","
+                     << items[i].category << ","
+                     << items[i].quantity << ","
+                     << items[i].receiveDate << endl;
+            }
+            delete[] items;
+        } else {
+            // Write an empty file if no items
+            cout << "No items to save to file." << endl;
+        }
+        
+        file.close();
+        cout << "Successfully saved " << itemCount << " food items to " << filename << endl;
+        return true;
+    }
 };
 
 // Utility sorting and searching functions for restaurant menu system
