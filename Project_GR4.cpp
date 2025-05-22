@@ -639,6 +639,37 @@ public:
         }
     }
     
+    // Interpolation Search - O(log log n) average case for uniformly distributed data
+    // A searching algorithm that works on uniformly distributed sorted data
+    // Parameters: sorted array, array size, and ID to search for
+    static int interpolationSearch(FoodItem arr[], int n, const string& id) {
+        // Find indexes of two corners (boundary points)
+        int low = 0, high = n - 1;
+        
+        // While elements exist and key is within range of array
+        while (low <= high && id >= arr[low].id && id <= arr[high].id) {
+            // Probing the position with key value using interpolation formula
+            // This estimates where the element might be based on its value
+            double val1 = id.compare(arr[low].id);
+            double val2 = arr[high].id.compare(arr[low].id);
+            double val3 = high - low;
+            int pos = low + (int)(val3 * (val1 / val2));
+            
+            // If element is found at the estimated position
+            if (arr[pos].id == id)
+                return pos;
+                
+            // If element at pos is smaller, search in right subarray
+            if (arr[pos].id < id)
+                low = pos + 1;
+            else
+                // If element at pos is larger, search in left subarray
+                high = pos - 1;
+        }
+        
+        return -1; // Element not found
+    }
+
     // Constructor - initializes the hash table for storing food items
     // Creates an array of empty linked queues (buckets)
     RestaurantInventorySystem() : itemCount(0) {
