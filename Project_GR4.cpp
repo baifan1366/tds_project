@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <ctime>
 
 using namespace std;
@@ -693,6 +694,61 @@ public:
         cout << "Successfully saved " << itemCount << " food items to " << filename << endl;
         return true;
     }
+
+    // Get all food items as an array from across all hash table buckets
+    // Returns: dynamically allocated array of FoodItem objects
+    // Note: Caller is responsible for deleting the returned array
+    FoodItem* getAllItems() {
+        // First, count the total number of items across all buckets
+        int totalItems = 0;
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            if (!hashTable[i].isEmpty()) {
+                totalItems += hashTable[i].getSize();
+            }
+        }
+        
+        // Check if there are any items to return
+        if (totalItems <= 0) {
+            return nullptr;
+        }
+        
+        // Try to allocate memory with exception handling to prevent crashes
+        FoodItem* items = nullptr;
+        try {
+            // Allocate memory for the array to hold all items based on the actual count
+            items = new FoodItem[totalItems];
+            int index = 0;
+            
+            // Iterate through all hash table buckets
+            for (int i = 0; i < TABLE_SIZE; i++) {
+                // Process non-empty buckets only
+                if (!hashTable[i].isEmpty()) {
+                    // Get all items in the current bucket as an array
+                    ADTLinkedQueue tempQueue = hashTable[i];
+                    FoodItem* queueItems = tempQueue.toArray();
+                    
+                    // Copy each item from the bucket to the main array
+                    if (queueItems != nullptr) {
+                        for (int j = 0; j < tempQueue.getSize(); j++) {
+                            if (index < totalItems) {
+                                items[index++] = queueItems[j];
+                            }
+                        }
+                        
+                        // Clean up the temporary array
+                        delete[] queueItems;
+                    }
+                }
+            }
+        } catch (const std::bad_alloc&) {
+            // Handle memory allocation failure
+            cout << "Memory allocation failed in getAllItems()" << endl;
+            return nullptr;
+        }
+        
+        return items;
+    }
+    
 };
 
 // Utility sorting and searching functions for restaurant menu system
