@@ -3,6 +3,16 @@
 #include <ctime>
 
 using namespace std;
+
+// Custom minimum function
+int min(int a, int b) {
+    return (a < b) ? a : b;
+}
+
+double min(double a, double b) {
+    return (a < b) ? a : b;
+}
+
 // Food item structure for restaurant inventory
 struct FoodItem {
     string id;            // Unique identifier
@@ -471,9 +481,8 @@ private:
     // This way you do not get so many COLLISIONS.
     static const int TABLE_SIZE = 101; // Prime number for better hash distribution
     ADTLinkedQueue* hashTable;            // Array of linked queues (buckets)
-    int itemCount;
 
-        // Universal hash function for strings
+    // Universal hash function for strings
     // Implements a polynomial rolling hash
     int universalHash(const string& key) {
         unsigned long hash = 0;
@@ -681,33 +690,165 @@ public:
         delete[] hashTable;
     }
 
-    // Saves all food items in the inventory to a CSV file
+    // Loads food items from a TXT file into the inventory system
+    // Returns true if at least one item was successfully loaded
+    virtual bool loadFromFile(const string& filename) override {
+        ifstream file(filename);
+        if (!file.is_open()) {
+            cout << "Error: Could not open file " << filename << endl;
+            return false;
+        }
+        
+        // Clear existing items to prevent duplicates
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            while (!hashTable[i].isEmpty()) {
+                hashTable[i].dequeue();
+            }
+        }
+        itemCount = 0;
+        
+        string line;
+        int itemsLoaded = 0;
+        
+        // Process each line in the file
+        while (getline(file, line)) {
+            string id, name, category, receiveDate;
+            double price;
+            int quantity;
+            
+            // Parse TXT line (format: id,name,price,category,quantity,receiveDate)
+            size_t pos = 0;
+            string token;
+            
+            // Extract ID
+            pos = line.find(",");
+            if (pos == string::npos) continue; // Skip malformed lines
+            id = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            // Extract Name
+            pos = line.find(",");
+            if (pos == string::npos) continue; // Skip malformed lines
+            name = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            // Extract Price
+            pos = line.find(",");
+            if (pos == string::npos) continue; // Skip malformed lines
+            price = stod(line.substr(0, pos));
+            line.erase(0, pos + 1);
+            
+            // Extract Category
+            pos = line.find(",");
+            if (pos == string::npos) continue; // Skip malformed lines
+            category = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            // Extract Quantity and optional Receive Date
+            pos = line.find(",");
+            if (pos == string::npos) {
+                quantity = stoi(line);
+                receiveDate = ""; // No receive date in file
+            } else {
+                quantity = stoi(line.substr(0, pos));
+                line.erase(0, pos + 1);
+                // Extract Receive Date
+                receiveDate = line;
+            }
+            
+            // Create food item and insert into hash table
+            FoodItem item(id, name, price, category, quantity);
+            if (!receiveDate.empty()) {
+                item.receiveDate = receiveDate;
+            }
+            
+            // Always add as a new batch (like addExistingFoodItem does)
+            // This ensures all items from the file are loaded, including multiple batches of the same ID
+            int position = findPosition(id);
+            if (position != -1) {
+                // Add directly to the queue at the found position
+                hashTable[position].enqueue(item);
+                
+                // Increment item count only for new unique IDs
+                bool isNewId = true;
+                for (int i = 0; i < position; i++) {
+                    if (!hashTable[i].isEmpty()) {
+                        ADTLinkedQueue tempQueue = hashTable[i];
+                        FoodItem* queueItems = tempQueue.toArray();
+                        for (int j = 0; j < tempQueue.getSize(); j++) {
+                            if (queueItems[j].id == id) {
+                                isNewId = false;
+                                break;
+                            }
+                        }
+                        delete[] queueItems;
+                        if (!isNewId) break;
+                    }
+                }
+                
+                for (int i = position + 1; i < TABLE_SIZE && isNewId; i++) {
+                    if (!hashTable[i].isEmpty()) {
+                        ADTLinkedQueue tempQueue = hashTable[i];
+                        FoodItem* queueItems = tempQueue.toArray();
+                        for (int j = 0; j < tempQueue.getSize(); j++) {
+                            if (queueItems[j].id == id) {
+                                isNewId = false;
+                                break;
+                            }
+                        }
+                        delete[] queueItems;
+                        if (!isNewId) break;
+                    }
+                }
+                
+                if (isNewId) {
+                    this->itemCount++;
+                }
+                
+                itemsLoaded++;
+            }
+        }
+        
+        file.close();
+        cout << "Successfully loaded " << itemsLoaded << " food items from " << filename << endl;
+        return itemsLoaded > 0;
+    }
+
+    // Saves all food items in the inventory to a TXT file
     // Optional sorting by name can be applied before saving
-    bool saveToFile(const string& filename, bool sorted = false) {
+    virtual bool saveToFile(const string& filename, bool sorted = false) override {
         ofstream file(filename);
         if (!file.is_open()) {
             cout << "Error: Could not open file " << filename << " for writing" << endl;
             return false;
         }
         
+        // First, count the total number of items across all buckets
+        int totalItems = 0;
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            if (!hashTable[i].isEmpty()) {
+                totalItems += hashTable[i].getSize();
+            }
+        }
+        
         // Get all food items as an array
         FoodItem* items = getAllItems();
         
         // Check if items were properly allocated
-        if (items == nullptr && itemCount > 0) {
+        if (items == nullptr && totalItems > 0) {
             cout << "Error: Failed to allocate memory for food items." << endl;
             file.close();
             return false;
         }
         
         // Sort items if requested
-        if (sorted && itemCount > 0 && items != nullptr) {
-            timSort(items, itemCount, true); // Sort by name
+        if (sorted && totalItems > 0 && items != nullptr) {
+            timSort(items, totalItems, true); // Sort by name
         }
         
         // Write to file
-        if (itemCount > 0 && items != nullptr) {
-            for (int i = 0; i < itemCount; i++) {
+        if (totalItems > 0 && items != nullptr) {
+            for (int i = 0; i < totalItems; i++) {
                 file << items[i].id << ","
                      << items[i].name << ","
                      << items[i].price << ","
@@ -716,15 +857,52 @@ public:
                      << items[i].receiveDate << endl;
             }
             delete[] items;
+            cout << "Successfully saved " << totalItems << " food items to " << filename << endl;
         } else {
             // Write an empty file if no items
             cout << "No items to save to file." << endl;
         }
         
         file.close();
-        cout << "Successfully saved " << itemCount << " food items to " << filename << endl;
         return true;
     }
+
+    // Insert a food item into the hash table
+    // Parameters: food item to insert
+    // Returns: true if successful, false if failed
+    bool insertFoodItem(const FoodItem& item) {
+        if (item.id.empty()) {
+            cout << "Error: Food item ID cannot be empty." << endl;
+            return false;
+        }
+        
+        // Find position using hash function and quadratic probing
+        int position = findPosition(item.id);
+        if (position == -1) {
+            cout << "Error: Hash table is full." << endl;
+            return false;
+        }
+        
+        // Check if item with this ID already exists
+        FoodItem* existingItem = findFoodItem(item.id);
+        if (existingItem != nullptr) {
+            // Update quantity if item exists (combine quantities)
+            FoodItem updated = *existingItem;
+            updated.quantity += item.quantity;
+            
+            // Remove existing item and add updated one to maintain consistency
+            removeFoodItem(item.id);
+            hashTable[position].enqueue(updated);
+            
+            delete existingItem;
+        } else {
+            // Add new item to the appropriate bucket
+            hashTable[position].enqueue(item);
+            this->itemCount++;
+        }
+        
+        return true;
+    }    
 
     // Get all food items as an array from across all hash table buckets
     // Returns: dynamically allocated array of FoodItem objects
