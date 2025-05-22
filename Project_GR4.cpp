@@ -819,6 +819,42 @@ void mergeMenuItems(MenuItem arr[], int left, int mid, int right, const string& 
     delete[] rightArr;
 }
 
+// Insertion sort (part of Tim Sort) for MenuItem objects
+// Efficiently sorts small subarrays using in-place insertion sort
+// Parameters: array, left boundary, right boundary, sort criteria (name, price, or category)
+void insertionSortMenuItems(MenuItem arr[], int left, int right, const string& sortBy = "name") {
+    for (int i = left + 1; i <= right; i++) {
+        // Store current element as temporary
+        MenuItem temp = arr[i];
+        int j = i - 1;
+        
+        if (sortBy == "price") {
+            // Sort by price (ascending order)
+            while (j >= left && arr[j].price > temp.price) {
+                arr[j + 1] = arr[j];
+                j--;
+            }
+        } 
+        else if (sortBy == "category") {
+            // Sort by category (alphabetical order)
+            while (j >= left && arr[j].category > temp.category) {
+                arr[j + 1] = arr[j];
+                j--;
+            }
+        }
+        else {
+            // Default: Sort by name (alphabetical order)
+            while (j >= left && arr[j].name > temp.name) {
+                arr[j + 1] = arr[j];
+                j--;
+            }
+        }
+        
+        // Place temp in its correct position
+        arr[j + 1] = temp;
+    }
+}
+
 class RestaurantMenuSystem {
     private:
         ADTLinkedList menuList;  // Linked list to store menu items
