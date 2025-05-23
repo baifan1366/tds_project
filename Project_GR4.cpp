@@ -18,6 +18,59 @@ double min(double a, double b) {
     return (a < b) ? a : b;
 }
 
+/**
+ * Restaurant base class for the restaurant management system
+ * Contains common functionality shared by inventory and menu subsystems
+ * @time_complexity Varies by method
+ * @space_complexity Varies by method
+ */
+class Restaurant {
+protected:
+    int itemCount;                     // Total number of items in the system
+    
+    // Protected constructor to prevent direct instantiation
+    Restaurant() : itemCount(0) {}
+    
+    // Copy constructor
+    Restaurant(const Restaurant& other) : itemCount(other.itemCount) {}
+    
+public:
+    // Static utility methods for UI
+    // Clearscreen function
+    static void clearScreen() {
+        system("cls");
+    }
+    
+    // Print header for display
+    static void printHeader(const string& title) {
+        cout << "\n" << string(100, '=') << endl;
+        cout << string(35, ' ') << title << endl;
+        cout << string(100, '=') << endl;
+    }
+    
+    // Print footer for display
+    static void printFooter() {
+        cout << string(100, '-') << endl;
+    }
+
+    // Virtual destructor to ensure proper cleanup in derived classes
+    virtual ~Restaurant() {}
+    
+    // Get current number of items in the system
+    virtual int getItemCount() const {
+        return itemCount;
+    }
+    
+    // Pure virtual functions to be implemented by derived classes
+    virtual bool loadFromFile(const string& filename) = 0;
+    virtual bool saveToFile(const string& filename, bool sorted = false) = 0;
+    virtual void displayAll() = 0;
+    virtual void displaySorted(bool byName = true) = 0;
+
+    // Friend function to display system statistics
+    friend void displayRestaurantStats(const Restaurant& restaurant);
+};
+
 // Food item structure for restaurant inventory
 struct FoodItem {
     string id;            // Unique identifier
@@ -480,7 +533,7 @@ public:
 const int PRIME = 31;
 const int MAX_HASH_KEY = 101; // Prime number for hash table size
 
-class RestaurantInventorySystem {
+class RestaurantInventorySystem  : public Restaurant {
 private:
     // In practice it always turns out that it is better to have an index range that is a prime number.
     // This way you do not get so many COLLISIONS.
@@ -509,6 +562,45 @@ private:
         // Using c1=0, c2=1: h'(k, i) = (h(k) + i^2) mod TABLE_SIZE
         return (hashValue + attempt * attempt) % TABLE_SIZE;
     }
+
+    // Find position using quadratic probing
+    int findPosition(const string& id) {
+        int hashValue = universalHash(id);
+        int attempt = 0;
+        
+        while (attempt < TABLE_SIZE) {
+            int position = quadraticProbing(hashValue, attempt);
+            ADTLinkedQueue queue = hashTable[position];
+            
+            if (queue.isEmpty()) {
+                return position; // Empty bucket found
+            }
+            
+            // Check if item exists in this bucket
+            FoodItem* items = queue.toArray();
+            bool found = false;
+            
+            for (int i = 0; i < queue.getSize(); i++) {
+                if (items[i].id == id) {
+                    found = true;
+                    delete[] items;
+                    return position;
+                }
+            }
+            
+            delete[] items;
+            
+            if (!found) {
+                attempt++;
+            } else {
+                return position;
+            }
+        }
+        
+        // If table is full, return -1
+        return -1;
+    }
+    
 public:
     // Make TABLE_SIZE accessible publicly
     static const int MAX_BUCKETS = 101; // Prime number Same as TABLE_SIZE
