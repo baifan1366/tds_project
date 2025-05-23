@@ -1323,6 +1323,38 @@ void insertionSortMenuItems(MenuItem arr[], int left, int right, const string& s
     }
 }
 
+// Tim Sort main function for MenuItem objects
+// A hybrid sorting algorithm combining insertion sort and merge sort
+// Average time complexity: O(n log n)
+// Parameters: array, array size, sort criteria (name, price, or category)
+void timSortMenuItems(MenuItem arr[], int n, const string& sortBy = "name") {
+    // Run size for insertion sort (optimal value based on typical array sizes)
+    const int RUN = 32;
+    
+    // First, sort individual subarrays of size RUN using insertion sort
+    // This is efficient for small arrays and creates sorted runs
+    for (int i = 0; i < n; i += RUN) {
+        insertionSortMenuItems(arr, i, min(i + RUN - 1, n - 1), sortBy);
+    }
+    
+    // Start merging sorted runs from size RUN
+    // Each iteration doubles the size of subarrays being merged
+    for (int size = RUN; size < n; size = 2 * size) {
+        // Pick starting points of different subarrays of current size
+        for (int left = 0; left < n; left += 2 * size) {
+            // Find ending points of subarrays
+            int mid = left + size - 1;
+            int right = min(left + 2 * size - 1, n - 1);
+            
+            // Merge subarrays arr[left...mid] and arr[mid+1...right]
+            if (mid < right) {
+                mergeMenuItems(arr, left, mid, right, sortBy);
+            }
+        }
+    }
+}
+
+
 class RestaurantMenuSystem {
     private:
         ADTLinkedList menuList;  // Linked list to store menu items
