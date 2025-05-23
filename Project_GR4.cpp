@@ -1,6 +1,11 @@
 #include <iostream>
 #include <fstream>
+#include <iomanip>
+#include <string>
 #include <ctime>
+#include <conio.h>
+#include <cstdlib>
+#include <sstream>
 
 using namespace std;
 
@@ -681,12 +686,12 @@ public:
 
     // Constructor - initializes the hash table for storing food items
     // Creates an array of empty linked queues (buckets)
-    RestaurantInventorySystem() : itemCount(0) {
+    RestaurantInventorySystem() : Restaurant() {
         hashTable = new ADTLinkedQueue[TABLE_SIZE];
     }
     
     // Destructor - frees all memory allocated for the hash table
-    ~RestaurantInventorySystem() {
+    virtual ~RestaurantInventorySystem() override {
         delete[] hashTable;
     }
 
@@ -902,6 +907,168 @@ public:
         }
         
         return true;
+    }    
+
+    // Find a food item by ID
+    // Parameters: ID to search for
+    // Returns: pointer to a copy of the found item or nullptr if not found
+    // Note: Caller is responsible for deleting the returned pointer
+    FoodItem* findFoodItem(const string& id) {
+        // Start with initial hash position
+        int position = universalHash(id);
+        int attempt = 0;
+        
+        // Try all possible positions using quadratic probing
+        while (attempt < TABLE_SIZE) {
+            int probePos = quadraticProbing(position, attempt);
+            
+            // If the bucket at this position is not empty
+            if (!hashTable[probePos].isEmpty()) {
+                // Search in the queue at this bucket
+                ADTLinkedQueue tempQueue = hashTable[probePos];
+                FoodItem* items = tempQueue.toArray();
+                int size = tempQueue.getSize();
+                
+                // Use interpolation search for larger arrays (optimization)
+                if (size > 1) {
+                    // Create a sorted copy for interpolation search
+                    FoodItem* sortedItems = new FoodItem[size];
+                    for (int i = 0; i < size; i++) {
+                        sortedItems[i] = items[i];
+                    }
+                    
+                    // Sort by id for interpolation search (simple bubble sort)
+                    for (int i = 0; i < size; i++) {
+                        for (int j = i + 1; j < size; j++) {
+                            if (sortedItems[i].id > sortedItems[j].id) {
+                                FoodItem temp = sortedItems[i];
+                                sortedItems[i] = sortedItems[j];
+                                sortedItems[j] = temp;
+                            }
+                        }
+                    }
+                    
+                    // Find using interpolation search (faster than linear for sorted data)
+                    int pos = interpolationSearch(sortedItems, size, id);
+                    if (pos != -1) {
+                        // Create a copy of the found item
+                        FoodItem* result = new FoodItem(sortedItems[pos]);
+                        delete[] items;
+                        delete[] sortedItems;
+                        return result;
+                    }
+                    
+                    delete[] sortedItems;
+                } else {
+                    // Linear search for small arrays (more efficient for few items)
+                    for (int i = 0; i < size; i++) {
+                        if (items[i].id == id) {
+                            // Create a copy of the found item
+                            FoodItem* result = new FoodItem(items[i]);
+                            delete[] items;
+                            return result;
+                        }
+                    }
+                }
+                
+                // Clean up allocated memory
+                delete[] items;
+            }
+            
+            // Try next position using quadratic probing
+            attempt++;
+        }
+        
+        return nullptr; // Item not found after checking all possible positions
+    }
+    
+    // Remove a food item by ID
+    // Parameters: ID of the item to remove
+    // Returns: true if found and removed, false if item not found
+    bool removeFoodItem(const string& id) {
+        // Start with initial hash position
+        int position = universalHash(id);
+        int attempt = 0;
+        
+        // Try all possible bucket positions using quadratic probing
+        while (attempt < TABLE_SIZE) {
+            int probePos = quadraticProbing(position, attempt);
+            
+            // Found a non-empty bucket, check if our item is here
+            if (!hashTable[probePos].isEmpty()) {
+                // Create a new queue that will contain all items except the one to remove
+                ADTLinkedQueue tempQueue = hashTable[probePos];
+                ADTLinkedQueue newQueue;
+                bool found = false;
+                
+                // Process each item in the bucket
+                while (!tempQueue.isEmpty()) {
+                    FoodItem item = tempQueue.dequeue();
+                    
+                    // Keep all items except the one matching the ID we want to remove
+                    if (item.id != id) {
+                        newQueue.enqueue(item);
+                    } else {
+                        found = true;
+                        this->itemCount--;
+                    }
+                }
+                
+                // If item was found and removed, update the bucket with the new queue
+                if (found) {
+                    hashTable[probePos] = newQueue;
+                    return true;
+                }
+            }
+            
+            // Try next position
+            attempt++;
+        }
+        
+        return false; // Item not found after checking all possible positions
+    }    
+
+    // Display all food items (unsorted)
+    // Shows a formatted table of all items in the inventory
+    virtual void displayAll() override {
+        // Print table header with title
+        printHeader("Restaurant Inventory System - All Items");
+        cout << left << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Price" 
+             << setw(15) << "Category" 
+             << setw(10) << "Quantity" 
+             << setw(25) << "Receive Date" << endl;
+        printFooter();
+        
+        // Count the total number of items across all buckets
+        int totalItems = 0;
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            if (!hashTable[i].isEmpty()) {
+                totalItems += hashTable[i].getSize();
+            }
+        }
+        
+        // Get all items from the hash table
+        FoodItem* items = getAllItems();
+        
+        // Handle empty inventory case
+        if (totalItems == 0) {
+            cout << "No items in inventory." << endl;
+        } else {
+            // Display each item with formatted columns
+            for (int i = 0; i < totalItems; i++) {
+                cout << left << setw(10) << items[i].id 
+                     << setw(30) << items[i].name 
+                     << setw(10) << fixed << setprecision(2) << items[i].price
+                     << setw(15) << items[i].category
+                     << setw(10) << items[i].quantity 
+                     << setw(25) << items[i].receiveDate << endl;
+            }
+        }
+        
+        // Clean up allocated memory
+        delete[] items;
     }    
 
     // Get all food items as an array from across all hash table buckets
