@@ -1163,6 +1163,135 @@ public:
         delete[] items;
     }    
 
+    // Display all food items sorted by name or quantity
+    // Parameter: byName - if true, sort by name; if false, sort by quantity
+    virtual void displaySorted(bool byName = true) override {
+        // Print table header with appropriate title based on sort criteria
+        printHeader(byName ? "Restaurant Inventory System - Sorted by Name" 
+                           : "Restaurant Inventory System - Sorted by Quantity (Total)");
+        
+        // Print column headers
+        cout << left << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Price" 
+             << setw(15) << "Category" 
+             << setw(10) << "Quantity" 
+             << setw(25) << "Receive Date" << endl;
+        printFooter();
+        
+        // Get all items as a array from the hash table
+        FoodItem* items = getAllItems();
+        
+        // Count the total number of items we got
+        int totalItemCount = 0;
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            if (!hashTable[i].isEmpty()) {
+                totalItemCount += hashTable[i].getSize();
+            }
+        }
+        
+        // Handle empty inventory case
+        if (totalItemCount == 0) {
+            cout << "No items in inventory." << endl;
+        } else {
+            if (byName) {
+                // Create a copy of the items array for sorting (preserve original)
+                FoodItem* sortedItems = new FoodItem[totalItemCount];
+                for (int i = 0; i < totalItemCount; i++) {
+                    sortedItems[i] = items[i];
+                }
+                
+                // Sort using Tim Sort algorithm based on name
+                timSort(sortedItems, totalItemCount, true);
+                
+                // Display each item with formatted columns
+                for (int i = 0; i < totalItemCount; i++) {
+                    cout << left << setw(10) << sortedItems[i].id 
+                         << setw(30) << sortedItems[i].name 
+                         << setw(10) << fixed << setprecision(2) << sortedItems[i].price
+                         << setw(15) << sortedItems[i].category
+                         << setw(10) << sortedItems[i].quantity 
+                         << setw(25) << sortedItems[i].receiveDate << endl;
+                }
+                
+                // Clean up allocated memory for sorted array
+                delete[] sortedItems;
+            } else {
+                // When sorting by quantity, we need to aggregate quantities for items with the same ID
+
+                // First, identify all unique IDs
+                int uniqueCount = 0;
+                string* uniqueIds = new string[totalItemCount];
+                
+                // Find unique IDs
+                for (int i = 0; i < totalItemCount; i++) {
+                    bool isUnique = true;
+                    
+                    // Check if this ID is already in our uniqueIds array
+                    for (int j = 0; j < uniqueCount; j++) {
+                        if (uniqueIds[j] == items[i].id) {
+                            isUnique = false;
+                            break;
+                        }
+                    }
+                    
+                    // If it's a new ID, add it to our unique IDs array
+                    if (isUnique) {
+                        uniqueIds[uniqueCount++] = items[i].id;
+                    }
+                }
+                
+                // Create an array to hold the aggregated items
+                FoodItem* aggregatedItems = new FoodItem[uniqueCount];
+                
+                // Initialize the aggregated items array with the first occurrence of each ID
+                for (int i = 0; i < uniqueCount; i++) {
+                    for (int j = 0; j < totalItemCount; j++) {
+                        if (items[j].id == uniqueIds[i]) {
+                            aggregatedItems[i] = items[j];
+                            break;
+                        }
+                    }
+                }
+                
+                // Sum up quantities for items with the same ID
+                for (int i = 0; i < uniqueCount; i++) {
+                    int totalQuantity = 0;
+                    
+                    // Sum quantities of all items with this ID
+                    for (int j = 0; j < totalItemCount; j++) {
+                        if (items[j].id == uniqueIds[i]) {
+                            totalQuantity += items[j].quantity;
+                        }
+                    }
+                    
+                    // Update the quantity in our aggregated items array
+                    aggregatedItems[i].quantity = totalQuantity;
+                }
+                
+                // Sort using Tim Sort algorithm based on quantity
+                timSort(aggregatedItems, uniqueCount, false);
+                
+                // Display each item with formatted columns
+                for (int i = 0; i < uniqueCount; i++) {
+                    cout << left << setw(10) << aggregatedItems[i].id 
+                         << setw(30) << aggregatedItems[i].name 
+                         << setw(10) << fixed << setprecision(2) << aggregatedItems[i].price
+                         << setw(15) << aggregatedItems[i].category
+                         << setw(10) << aggregatedItems[i].quantity 
+                         << "(Total)" << endl;
+                }
+                
+                // Clean up allocated memory
+                delete[] uniqueIds;
+                delete[] aggregatedItems;
+            }
+        }
+        
+        // Clean up allocated memory for original array
+        delete[] items;
+    }
+
     // Get all food items as an array from across all hash table buckets
     // Returns: dynamically allocated array of FoodItem objects
     // Note: Caller is responsible for deleting the returned array
