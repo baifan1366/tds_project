@@ -1376,6 +1376,105 @@ public:
             cout << "Item with ID " << id << " not found." << endl;
         }
     }
+
+    // Get current number of items in the system
+    virtual int getItemCount() const override {
+        return Restaurant::getItemCount();
+    }
+
+    // Display queue contents for a specific bucket
+    // Parameters: bucketIndex - the index of the bucket to display
+    void displayQueue(int bucketIndex) {
+        // Validate bucket index
+        if (bucketIndex < 0 || bucketIndex >= TABLE_SIZE) {
+            cout << "Invalid bucket index." << endl;
+            return;
+        }
+        
+        // Get a copy of the queue at the specified bucket
+        ADTLinkedQueue tempQueue = hashTable[bucketIndex];
+        
+        // Check if the bucket is empty
+        if (tempQueue.isEmpty()) {
+            cout << "Bucket " << bucketIndex << " is empty." << endl;
+            return;
+        }
+        
+        // Get all items in the bucket as an array
+        FoodItem* items = tempQueue.toArray();
+        int queueSize = tempQueue.getSize();
+        
+        // Print table header
+        printHeader("Queue Contents for Bucket " + to_string(bucketIndex));
+        cout << left << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Price" 
+             << setw(15) << "Category" 
+             << setw(10) << "Quantity" 
+             << setw(25) << "Receive Date" << endl;
+        printFooter();
+        
+        // Display all items in the bucket
+        for (int i = 0; i < queueSize; i++) {
+            cout << left << setw(10) << items[i].id 
+                 << setw(30) << items[i].name 
+                 << setw(10) << fixed << setprecision(2) << items[i].price
+                 << setw(15) << items[i].category
+                 << setw(10) << items[i].quantity 
+                 << setw(25) << items[i].receiveDate << endl;
+        }
+        
+        // Clean up allocated memory
+        delete[] items;
+    }        
+
+    // Display all non-empty queues in the hash table
+    // Shows the contents of each bucket that contains at least one item
+    void displayAllQueues() {
+        printHeader("All Queues Contents");
+        
+        // Track if any non-empty queues were found
+        bool anyQueues = false;
+        
+        // Iterate through all buckets in the hash table
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            // Display only non-empty buckets
+            if (!hashTable[i].isEmpty()) {
+                // Print bucket header with index and size information
+                cout << "\nBucket " << i << " (Size: " << hashTable[i].getSize() << "):" << endl;
+                cout << left << setw(10) << "ID" 
+                     << setw(30) << "Name" 
+                     << setw(10) << "Price" 
+                     << setw(15) << "Category" 
+                     << setw(10) << "Quantity" 
+                     << setw(25) << "Receive Date" << endl;
+                cout << string(100, '-') << endl;
+                
+                // Get items in the current bucket
+                FoodItem* items = hashTable[i].toArray();
+                int queueSize = hashTable[i].getSize();
+                
+                // Display each item in the bucket
+                for (int j = 0; j < queueSize; j++) {
+                    cout << left << setw(10) << items[j].id 
+                         << setw(30) << items[j].name 
+                         << setw(10) << fixed << setprecision(2) << items[j].price
+                         << setw(15) << items[j].category
+                         << setw(10) << items[j].quantity 
+                         << setw(25) << items[j].receiveDate << endl;
+                }
+                
+                // Clean up allocated memory
+                delete[] items;
+                anyQueues = true;
+            }
+        }
+        
+        // Display message if all buckets are empty
+        if (!anyQueues) {
+            cout << "No non-empty queues found." << endl;
+        }
+    }    
 };
 
 // Utility sorting and searching functions for restaurant menu system
