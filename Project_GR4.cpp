@@ -1346,6 +1346,36 @@ public:
         return items;
     }
     
+    // Search and display food item by ID
+    // Presents formatted information about the item if found
+    void searchById(const string& id) {
+        // Find the item using the hash table lookup
+        FoodItem* item = findFoodItem(id);
+        
+        // Print table header
+        printHeader("Search Result");
+        cout << left << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Price" 
+             << setw(15) << "Category" 
+             << setw(10) << "Quantity" 
+             << setw(25) << "Receive Date" << endl;
+        printFooter();
+        
+        // Display item if found, otherwise show not found message
+        if (item != nullptr) {
+            // Format and display the item details
+            cout << left << setw(10) << item->id 
+                 << setw(30) << item->name 
+                 << setw(10) << fixed << setprecision(2) << item->price
+                 << setw(15) << item->category
+                 << setw(10) << item->quantity 
+                 << setw(25) << item->receiveDate << endl;
+            delete item;  // Clean up allocated memory
+        } else {
+            cout << "Item with ID " << id << " not found." << endl;
+        }
+    }
 };
 
 // Utility sorting and searching functions for restaurant menu system
