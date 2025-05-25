@@ -1742,6 +1742,77 @@ class RestaurantMenuSystem {
         ~RestaurantMenuSystem() {}
 };
 
+
+/**
+ * Base User class for authentication and user management
+ * Provides common functionality for all user types
+ * @time_complexity Varies by method
+ * @space_complexity Varies by method
+ */
+class User {
+protected:
+    string username;
+    string password;
+    bool isLoggedIn;
+    
+    // Protected constructor to prevent direct instantiation
+    User(const string& _username = "", const string& _password = "") 
+        : username(_username), password(_password), isLoggedIn(false) {}
+    
+public:
+    // Virtual destructor for proper cleanup in derived classes
+    virtual ~User() {}
+    
+    // Getter for login status
+    bool getLoginStatus() const {
+        return isLoggedIn;
+    }
+    
+    // Getter for username 
+    string getUsername() const {
+        return username;
+    }
+    
+    // Virtual login function to be overridden by derived classes
+    virtual bool login(const string& _username, const string& _password) {
+        // Base implementation (will be overridden)
+        if (username == _username && password == _password) {
+            isLoggedIn = true;
+            return true;
+        }
+        return false;
+    }
+    
+    // Virtual logout function to be overridden by derived classes
+    virtual void logout() {
+        isLoggedIn = false;
+        cout << "Logged out successfully." << endl;
+    }
+    
+    // Virtual register account function to be overridden by derived classes
+    virtual bool registerAccount(const string& _username, const string& _password) {
+        // Base implementation (will be overridden)
+        username = _username;
+        password = _password;
+        return true;
+    }
+    
+    // Overloaded version of registerAccount that takes a role parameter
+    virtual bool registerAccount(const string& _username, const string& _password, const string& role) {
+        // Call the base version
+        return registerAccount(_username, _password);
+    }
+    
+    // Friend function declaration
+    friend void displayUserInfo(const User& user);
+};
+
+// Friend function implementation
+void displayUserInfo(const User& user) {
+    cout << "Username: " << user.username << endl;
+    cout << "Login Status: " << (user.isLoggedIn ? "Logged In" : "Logged Out") << endl;
+}
+
 int main()
 {
     return 0;
