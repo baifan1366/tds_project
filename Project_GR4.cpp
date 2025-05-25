@@ -1474,7 +1474,123 @@ public:
         if (!anyQueues) {
             cout << "No non-empty queues found." << endl;
         }
-    }    
+    }
+
+    // Use (consume) a food item by ID - simplified implementation
+    // Parameters: id - the ID of the food item to consume
+    //             amount - the quantity to consume (default: 1)
+    // Returns: true if successfully consumed, false if item not found or not enough quantity
+    bool useFoodItem(const string& id, int amount = 1) {
+        try {
+            // Search for the item info first to verify it exists and has enough quantity
+            string itemName = "";
+            int totalQuantity = 0;
+            
+            // First pass: Find the item and calculate total quantity across all buckets
+            for (int i = 0; i < TABLE_SIZE; i++) {
+                if (hashTable[i].isEmpty()) continue;
+                
+                // Get all items in this bucket using dequeue/enqueue method to inspect them
+                ADTLinkedQueue oldQueue;
+                int size = hashTable[i].getSize();
+                
+                // Remove each item from the original queue and add to temporary queue
+                for (int j = 0; j < size; j++) {
+                    FoodItem item = hashTable[i].dequeue();
+                    oldQueue.enqueue(item);
+                    
+                    // If this is the item we're looking for, accumulate quantity info
+                    if (item.id == id) {
+                        totalQuantity += item.quantity;
+                        if (itemName.empty()) {
+                            itemName = item.name;
+                        }
+                    }
+                }
+                
+                // Restore the items back to the original bucket
+                size = oldQueue.getSize();
+                for (int j = 0; j < size; j++) {
+                    hashTable[i].enqueue(oldQueue.dequeue());
+                }
+            }
+            
+            // Check if item exists
+            if (totalQuantity == 0) {
+                cout << "Error: Food item with ID " << id << " not found." << endl;
+                return false;
+            }
+            
+            // Check if enough quantity is available
+            if (totalQuantity < amount) {
+                cout << "Error: Not enough quantity available. Only " << totalQuantity << " units of " << itemName << " in stock." << endl;
+                return false;
+            }
+            
+            // Second pass: Now we'll consume the items using FIFO order
+            int remaining = amount;
+            
+            // Process each bucket until we've consumed the required amount
+            for (int i = 0; i < TABLE_SIZE && remaining > 0; i++) {
+                if (hashTable[i].isEmpty()) continue;
+                
+                // Use temporary queues to process the bucket
+                ADTLinkedQueue oldQueue;
+                ADTLinkedQueue newQueue;
+                int size = hashTable[i].getSize();
+                
+                // Move all items to temporary queue to process them
+                for (int j = 0; j < size; j++) {
+                    oldQueue.enqueue(hashTable[i].dequeue());
+                }
+                
+                // Process each item - either consume it or keep it
+                size = oldQueue.getSize();
+                for (int j = 0; j < size; j++) {
+                    FoodItem item = oldQueue.dequeue();
+                    
+                    // If this is our target item and we still need to consume more
+                    if (item.id == id && remaining > 0) {
+                        if (item.quantity > remaining) {
+                            // Partially consume this item (reduce quantity and keep in queue)
+                            item.quantity -= remaining;
+                            remaining = 0;
+                            newQueue.enqueue(item);
+                        } else {
+                            // Fully consume this item (don't add back to queue)
+                            remaining -= item.quantity;
+                            // Skip re-adding it to the queue
+                            // Update total item count since an item is fully removed
+                            this->itemCount--;
+                        }
+                    } else {
+                        // Not our target item or nothing left to consume, keep it as is
+                        newQueue.enqueue(item);
+                    }
+                }
+                
+                // Replace the bucket with the new queue containing updated items
+                hashTable[i] = newQueue;
+            }
+            
+            // Display success message with consumption details
+            cout << "Successfully used " << amount << " units of " << itemName << ". Remaining: " << (totalQuantity - amount) << endl;
+            return true;
+
+        } catch (const std::bad_alloc& e) {
+            // Handle memory allocation errors
+            cout << "Memory allocation error in useFoodItem: " << e.what() << endl;
+            return false;
+        } catch (const std::exception& e) {
+            // Handle standard exceptions
+            cout << "Error in useFoodItem: " << e.what() << endl;
+            return false;
+        } catch (...) {
+            // Handle any other unexpected errors
+            cout << "Unknown error in useFoodItem" << endl;
+            return false;
+        }
+    }        
 };
 
 // Utility sorting and searching functions for restaurant menu system
