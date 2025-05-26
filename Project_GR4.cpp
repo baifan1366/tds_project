@@ -1841,6 +1841,153 @@ public:
     friend void displayUserInfo(const User& user);
 };
 
+/**
+ * Staff class for regular staff users
+ * Manages staff-specific functionality and authentication
+ */
+class Staff : public User {
+private:
+    string staffId;
+    string position;
+    
+public:
+    // Constructor
+    Staff(const string& _username = "", const string& _password = "", 
+          const string& _staffId = "", const string& _position = "")
+        : User(_username, _password), staffId(_staffId), position(_position) {}
+    
+    // Getter for staff ID
+    string getStaffId() const {
+        return staffId;
+    }
+    
+    // Getter for position
+    string getPosition() const {
+        return position;
+    }
+    
+    // Setters
+    void setStaffId(const string& _staffId) {
+        staffId = _staffId;
+    }
+    
+    void setPosition(const string& _position) {
+        position = _position;
+    }
+    
+    // Override login to check against staff.txt file
+    virtual bool login(const string& _username, const string& _password) override {
+        ifstream file("staff.txt");
+        if (!file.is_open()) {
+            cout << "Error: Could not open staff credentials file." << endl;
+            return false;
+        }
+        
+        string line;
+        bool found = false;
+        
+        // Format: username,password,staffId,position
+        while (getline(file, line)) {
+            size_t pos = line.find(",");
+            if (pos == string::npos) continue;
+            
+            string fileUsername = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            pos = line.find(",");
+            if (pos == string::npos) continue;
+            
+            string filePassword = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            pos = line.find(",");
+            if (pos == string::npos) continue;
+            
+            string fileStaffId = line.substr(0, pos);
+            string filePosition = line.substr(pos + 1);
+            
+            if (fileUsername == _username && filePassword == _password) {
+                username = fileUsername;
+                password = filePassword;
+                staffId = fileStaffId;
+                position = filePosition;
+                isLoggedIn = true;
+                found = true;
+                break;
+            }
+        }
+        
+        file.close();
+        
+        if (!found) {
+            cout << "Invalid username or password for staff login." << endl;
+        } else {
+            cout << "Staff login successful. Welcome " << username << "!" << endl;
+        }
+        
+        return found;
+    }
+    
+    // Override logout with staff-specific message
+    virtual void logout() override {
+        isLoggedIn = false;
+        cout << "Staff member " << username << " logged out successfully." << endl;
+    }
+    
+    // Override register to save to staff.txt file
+    virtual bool registerAccount(const string& _username, const string& _password) override {
+        return registerAccount(_username, _password, "", "Default");
+    }
+    
+    // Override overloaded registerAccount with staff-specific parameters
+    virtual bool registerAccount(const string& _username, const string& _password, 
+                                const string& _staffId, const string& _position) {
+        // Check if username already exists
+        ifstream checkFile("staff.txt");
+        if (checkFile.is_open()) {
+            string line;
+            while (getline(checkFile, line)) {
+                size_t pos = line.find(",");
+                if (pos != string::npos) {
+                    string existingUsername = line.substr(0, pos);
+                    if (existingUsername == _username) {
+                        cout << "Error: Username already exists." << endl;
+                        checkFile.close();
+                        return false;
+                    }
+                }
+            }
+            checkFile.close();
+        }
+        
+        // Save to staff.txt
+        ofstream file("staff.txt", ios::app);
+        if (!file.is_open()) {
+            cout << "Error: Could not open staff credentials file for writing." << endl;
+            return false;
+        }
+        
+        // Update member variables
+        username = _username;
+        password = _password;
+        staffId = _staffId;
+        position = _position;
+        
+        // Write to file
+        file << username << "," << password << "," << staffId << "," << position << endl;
+        file.close();
+        
+        cout << "Staff account registered successfully." << endl;
+        return true;
+    }
+    
+    // Overload the original virtual registerAccount with role parameter
+    virtual bool registerAccount(const string& _username, const string& _password, const string& role) override {
+        // For staff, we ignore the role parameter and use default position
+        return registerAccount(_username, _password, "", "Default");
+    }
+};
+
 // Friend function implementation
 void displayUserInfo(const User& user) {
     cout << "Username: " << user.username << endl;
