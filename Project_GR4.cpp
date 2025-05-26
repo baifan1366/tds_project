@@ -1216,8 +1216,13 @@ public:
         
         return items;
     }
+
+    
     
 };
+
+
+
 
 // Utility sorting and searching functions for restaurant menu system
 
@@ -1400,6 +1405,32 @@ class RestaurantMenuSystem {
         
         // Destructor - linked list handles its own memory cleanup
         ~RestaurantMenuSystem() {}
+
+        // Adds a new menu item to the system
+        // Parameters: item - the menu item to add
+        // Returns: true if successfully added, false if failed (e.g., duplicate ID)
+        bool addMenuItem(const MenuItem& item) {
+            // Validate menu item ID
+            if (item.id.empty()) {
+                cout << "Error: Menu item ID cannot be empty." << endl;
+                return false;
+            }
+            
+            // Check if item with this ID already exists (prevent duplicates)
+            MenuItem* existingItem = findMenuItem(item.id);
+            if (existingItem != nullptr) {
+                cout << "Error: Menu item with ID " << item.id << " already exists." << endl;
+                delete existingItem;
+                return false;
+            }
+            
+            // Add the item to the end of the linked list
+            menuList.append(item);
+            this->itemCount++;
+            
+            return true;
+        }
+        
 };
 
 int main()
