@@ -71,6 +71,13 @@ public:
     friend void displayRestaurantStats(const Restaurant& restaurant);
 };
 
+// Friend function implementation
+void displayRestaurantStats(const Restaurant& restaurant) {
+    Restaurant::printHeader("Restaurant System Statistics");
+    cout << "Total number of items: " << restaurant.itemCount << endl;
+    Restaurant::printFooter();
+}
+
 // Food item structure for restaurant inventory
 struct FoodItem {
     string id;            // Unique identifier
@@ -184,6 +191,33 @@ struct MenuItem {
             delete[] ingredients;
             ingredients = nullptr;
         }
+    }
+
+    // Adds a new ingredient with specified quantity to the menu item
+    // Dynamically resizes the ingredients array
+    void addIngredient(const string& foodItemId, int quantity) {
+        // Format: "foodItemId:quantity"
+        string ingredient = foodItemId + ":" + to_string(quantity);
+        
+        // Create new array with increased size
+        string* newIngredients = new string[ingredientCount + 1];
+        
+        // Copy existing ingredients to new array
+        for (int i = 0; i < ingredientCount; i++) {
+            newIngredients[i] = ingredients[i];
+        }
+        
+        // Add new ingredient at the end
+        newIngredients[ingredientCount] = ingredient;
+        
+        // Delete old array to prevent memory leaks
+        if (ingredients != nullptr) {
+            delete[] ingredients;
+        }
+        
+        // Update member variables
+        ingredients = newIngredients;
+        ingredientCount++;
     }
 };
 
