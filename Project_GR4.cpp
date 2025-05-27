@@ -2059,8 +2059,139 @@ void displayUserInfo(const User& user) {
     cout << "Login Status: " << (user.isLoggedIn ? "Logged In" : "Logged Out") << endl;
 }
 
+
+/**
+ * Authentication Manager class to handle user login and registration
+ * Manages both Staff and Admin users in a unified interface
+ */
+class AuthManager {
+private:
+    Staff* currentStaff;
+    Admin* currentAdmin;
+    bool isAdminMode;
+    
+public:
+    // Constructor
+    AuthManager() : currentStaff(nullptr), currentAdmin(nullptr), isAdminMode(false) {}
+    
+    // Destructor - clean up dynamically allocated objects
+    ~AuthManager() {
+        if (currentStaff != nullptr) {
+            delete currentStaff;
+        }
+        if (currentAdmin != nullptr) {
+            delete currentAdmin;
+        }
+    }
+    
+    // Check if any user is logged in
+    bool isLoggedIn() const {
+        return (currentStaff != nullptr && currentStaff->getLoginStatus()) || 
+               (currentAdmin != nullptr && currentAdmin->getLoginStatus());
+    }
+    
+    // Check if current user is an admin
+    bool isAdminLoggedIn() const {
+        return isAdminMode && currentAdmin != nullptr && currentAdmin->getLoginStatus();
+    }
+    
+    // Get current user username
+    string getCurrentUsername() const {
+        if (isAdminMode && currentAdmin != nullptr) {
+            return currentAdmin->getUsername();
+        } else if (!isAdminMode && currentStaff != nullptr) {
+            return currentStaff->getUsername();
+        }
+        return "";
+    }
+    
+    // Handle login process
+    bool login(const string& username, const string& password, bool adminLogin) {
+        if (adminLogin) {
+            // Admin login
+            if (currentAdmin == nullptr) {
+                currentAdmin = new Admin();
+            }
+            if (currentAdmin->login(username, password)) {
+                isAdminMode = true;
+                return true;
+            }
+        } else {
+            // Staff login
+            if (currentStaff == nullptr) {
+                currentStaff = new Staff();
+            }
+            if (currentStaff->login(username, password)) {
+                isAdminMode = false;
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    // Handle logout process
+    void logout() {
+        if (isAdminMode && currentAdmin != nullptr) {
+            currentAdmin->logout();
+        } else if (!isAdminMode && currentStaff != nullptr) {
+            currentStaff->logout();
+        } else {
+            cout << "No user is currently logged in." << endl;
+        }
+    }
+    
+    // Handle staff registration
+    bool registerStaff(const string& username, const string& password, 
+                      const string& staffId, const string& position) {
+        Staff staff;
+        return staff.registerAccount(username, password, staffId, position);
+    }
+    
+    // Handle admin registration
+    bool registerAdmin(const string& username, const string& password, 
+                       const string& adminId, const string& accessLevel) {
+        Admin admin;
+        return admin.registerAccount(username, password, adminId, accessLevel);
+    }
+    
+    // Overloaded function to register either staff or admin based on role
+    bool registerUser(const string& username, const string& password, const string& role) {
+        if (role == "admin") {
+            Admin admin;
+            return admin.registerAccount(username, password, role);
+        } else {
+            Staff staff;
+            return staff.registerAccount(username, password, role);
+        }
+    }
+};
+
 int main()
-{
+{   
+    AuthManager authManager;
+    bool isAuthenticated = false;
+    RestaurantInventorySystem inventory;
+    RestaurantMenuSystem menuSystem; 
+    int choice;
+    // First check for authentication
+    do {
+        // Clear screen for better UI experience
+        RestaurantInventorySystem::clearScreen();
+        
+        // Check if user is already authenticated
+        if (!isAuthenticated) {
+            // Display authentication menu
+            cout << "\n==== Restaurant Management System - Authentication ====" << endl;
+            cout << "1. Login as Staff" << endl;
+            cout << "2. Login as Admin" << endl;
+            cout << "3. Register Staff Account" << endl;
+            cout << "4. Register Admin Account" << endl;
+            cout << "0. Exit" << endl;
+            cout << "Enter your choice: ";
+            cin >> choice;
+        }
+    } while (choice != 0);
+
     return 0;
 }
 
