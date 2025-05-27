@@ -9,6 +9,140 @@
 
 using namespace std;
 
+/**
+ * ValidationCheck class provides static methods for validating various inputs
+ * This class contains utility methods for common validation tasks throughout the application
+ */
+class ValidationCheck {
+public:
+    // Check if string length is within acceptable range
+    static bool isValidStringLength(const string& str, int minLength, int maxLength) {
+        int length = str.length();
+        return (length >= minLength && length <= maxLength);
+    }
+    
+    // Check if price is valid (minimum 1.00 and has exactly 2 decimal places)
+    static bool isValidPrice(double price) {
+        // Check minimum price
+        if (price < 1.0) {
+            return false;
+        }
+        
+        // Check if price has exactly 2 decimal places
+        // Convert to string and check decimal part
+        string priceStr = to_string(price);
+        size_t decimalPos = priceStr.find('.');
+        
+        if (decimalPos == string::npos) {
+            // No decimal point
+            return true;
+        }
+        
+        // Get decimal part and check its length after removing trailing zeros
+        string decimalPart = priceStr.substr(decimalPos + 1);
+        while (!decimalPart.empty() && decimalPart.back() == '0') {
+            decimalPart.pop_back();
+        }
+        
+        return decimalPart.length() <= 2;
+    }
+    
+    // Check if quantity is valid (between 1 and 999)
+    static bool isValidQuantity(int quantity) {
+        return (quantity >= 1 && quantity <= 999);
+    }
+    
+    // Check if ID follows the format of 1 character followed by 3 digits
+    static bool isValidID(const string& id) {
+        // Check length
+        if (id.length() != 4) {
+            return false;
+        }
+        
+        // Check first character is a letter
+        if (!isalpha(id[0])) {
+            return false;
+        }
+        
+        // Check remaining 3 characters are digits
+        for (int i = 1; i < 4; i++) {
+            if (!isdigit(id[i])) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Display validation error message
+    static void showError(const string& message) {
+        cout << "Error: " << message << endl;
+    }
+    
+    // Check if username is valid (between 5 and 20 characters, alphanumeric with underscore)
+    static bool isValidUsername(const string& username) {
+        // Check length
+        if (!isValidStringLength(username, 5, 20)) {
+            return false;
+        }
+        
+        // Check characters (only allow letters, numbers, and underscore)
+        for (char c : username) {
+            if (!isalnum(c) && c != '_') {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Check if password is valid (between 6 and 20 characters, with at least one number and one letter)
+    static bool isValidPassword(const string& password) {
+        // Check length
+        if (!isValidStringLength(password, 6, 20)) {
+            return false;
+        }
+        
+        bool hasLetter = false;
+        bool hasDigit = false;
+        
+        // Check for at least one letter and one number
+        for (char c : password) {
+            if (isalpha(c)) {
+                hasLetter = true;
+            } else if (isdigit(c)) {
+                hasDigit = true;
+            }
+        }
+        
+        return hasLetter && hasDigit;
+    }
+    
+    // Check if Staff/Admin ID is valid (S/A followed by 3 digits)
+    static bool isValidStaffAdminID(const string& id, bool isAdmin) {
+        // Check length
+        if (id.length() != 4) {
+            return false;
+        }
+        
+        // Check first character (S for Staff, A for Admin)
+        if (isAdmin && id[0] != 'A') {
+            return false;
+        } else if (!isAdmin && id[0] != 'S') {
+            return false;
+        }
+        
+        // Check remaining 3 characters are digits
+        for (int i = 1; i < 4; i++) {
+            if (!isdigit(id[i])) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+};
+
 // Custom minimum function
 int min(int a, int b) {
     return (a < b) ? a : b;
