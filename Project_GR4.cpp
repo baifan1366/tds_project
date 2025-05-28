@@ -2190,6 +2190,16 @@ class RestaurantMenuSystem {
             
             return true;
         }
+
+        // Finds a menu item by its ID
+        // Parameters: id - the ID to search for
+        // Returns: pointer to a copy of the found item or nullptr if not found
+        // Note: Caller is responsible for deleting the returned pointer
+        MenuItem* findMenuItem(const string& id) const {
+            return menuList.findById(id);
+        }
+
+
         
 };
 
