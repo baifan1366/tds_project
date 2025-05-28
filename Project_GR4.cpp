@@ -268,7 +268,7 @@ struct MenuItem {
              const string& _description, const string& _category)
         : id(_id), name(_name), price(_price), description(_description), 
           category(_category), ingredientCount(0), ingredients(nullptr) {}
-          
+    
     // Copy constructor - performs deep copy of other MenuItem including ingredients
     MenuItem(const MenuItem& other) 
         : id(other.id), name(other.name), price(other.price), 
@@ -326,7 +326,7 @@ struct MenuItem {
             ingredients = nullptr;
         }
     }
-
+    
     // Adds a new ingredient with specified quantity to the menu item
     // Dynamically resizes the ingredients array
     void addIngredient(const string& foodItemId, int quantity) {
@@ -353,7 +353,7 @@ struct MenuItem {
         ingredients = newIngredients;
         ingredientCount++;
     }
-
+    
     // Removes an ingredient from the menu item by its food item ID
     // Returns true if found and removed, false otherwise
     bool removeIngredient(const string& foodItemId) {
@@ -502,7 +502,8 @@ public:
         size++;
     }
     
-    // Inserts a menu item at the specified position
+    // Inserts a menu item at the specified position (0-based index)
+    // Returns true if successful, false if position is invalid
     bool insertAt(int position, const MenuItem& item) {
         // Check if position is valid
         if (position < 0 || position > size) {
@@ -536,6 +537,7 @@ public:
     }
     
     // Removes a menu item by its ID
+    // Returns true if found and removed, false otherwise
     bool removeById(const string& id) {
         if (head == nullptr) {
             return false;
@@ -585,6 +587,8 @@ public:
     }
     
     // Searches for a menu item by ID and returns a copy if found
+    // Returns nullptr if no matching item exists
+    // Caller is responsible for deleting the returned pointer
     MenuItem* findById(const string& id) const {
         MenuNode* current = head;
         
@@ -598,8 +602,10 @@ public:
         
         return nullptr; // Item not found
     }
-
+    
     // Creates a dynamically allocated array containing all menu items
+    // Returns nullptr if the list is empty
+    // Caller is responsible for deleting the returned array
     MenuItem* toArray() const {
         if (isEmpty()) {
             return nullptr;
@@ -771,6 +777,7 @@ public:
 const int PRIME = 31;
 const int MAX_HASH_KEY = 101; // Prime number for hash table size
 
+// Restaurant Inventory System with Hash Table
 class RestaurantInventorySystem  : public Restaurant {
 private:
     // In practice it always turns out that it is better to have an index range that is a prime number.
@@ -842,85 +849,99 @@ private:
 public:
     // Make TABLE_SIZE accessible publicly
     static const int MAX_BUCKETS = 101; // Prime number Same as TABLE_SIZE
-    
-    // Static utility methods
-    // Clearscreen function
-    static void clearScreen() {
-        system("cls");
-    }
-    
-    // Print header for display
-    static void printHeader(const string& title) {
-        cout << "\n" << string(100, '=') << endl;
-        cout << string(35, ' ') << title << endl;
-        cout << string(100, '=') << endl;
-    }
-    
-    // Print footer for display
-    static void printFooter() {
-        cout << string(100, '-') << endl;
-    }
         
-    // Merge function (part of Tim Sort)
-    // Merges two sorted subarrays into one sorted array
+    // Merge function for Tim Sort
     // Parameters: array, left boundary, middle point, right boundary, and sort criteria
     static void merge(FoodItem arr[], int left, int mid, int right, bool byName) {
-        int len1 = mid - left + 1;
-        int len2 = right - mid;
+        int i, j, k;
+        int n1 = mid - left + 1;
+        int n2 = right - mid;
         
-        // Create temporary arrays to hold the two subarrays
-        FoodItem* leftArr = new FoodItem[len1];
-        FoodItem* rightArr = new FoodItem[len2];
+        // Create temporary arrays
+        FoodItem* L = new FoodItem[n1];
+        FoodItem* R = new FoodItem[n2];
         
-        // Copy data to temporary arrays
-        for (int i = 0; i < len1; i++)
-            leftArr[i] = arr[left + i];
-        for (int i = 0; i < len2; i++)
-            rightArr[i] = arr[mid + 1 + i];
+        // Copy data to temp arrays L[] and R[]
+        for (i = 0; i < n1; i++)
+            L[i] = arr[left + i];
+        for (j = 0; j < n2; j++)
+            R[j] = arr[mid + 1 + j];
         
-        // Merge the temporary arrays back into the original array
-        int i = 0, j = 0, k = left;
+        // Merge the temp arrays back into arr[l..r]
+        i = 0; // Initial index of first subarray
+        j = 0; // Initial index of second subarray
+        k = left; // Initial index of merged subarray
         
-        while (i < len1 && j < len2) {
+        while (i < n1 && j < n2) {
             if (byName) {
-                // Sort by name (alphabetical order)
-                if (leftArr[i].name <= rightArr[j].name) {
-                    arr[k] = leftArr[i];
-                    i++;
-                } else {
-                    arr[k] = rightArr[j];
-                    j++;
+                // Sort by name (alphabetically)
+                // Case-insensitive comparison of names
+                string nameL = L[i].name;
+                string nameR = R[j].name;
+                
+                // Convert to lowercase for comparison without using transform
+                bool namesSame = true;
+                int minLen = (nameL.length() < nameR.length()) ? nameL.length() : nameR.length();
+                
+                for (int idx = 0; idx < minLen; idx++) {
+                    char cL = (nameL[idx] >= 'A' && nameL[idx] <= 'Z') ? nameL[idx] + 32 : nameL[idx];
+                    char cR = (nameR[idx] >= 'A' && nameR[idx] <= 'Z') ? nameR[idx] + 32 : nameR[idx];
+                    
+                    if (cL < cR) {
+                        // L comes before R
+                        namesSame = false;
+                        arr[k] = L[i];
+                        i++;
+                        break;
+                    } else if (cL > cR) {
+                        // R comes before L
+                        namesSame = false;
+                        arr[k] = R[j];
+                        j++;
+                        break;
+                    }
+                }
+                
+                // If all compared characters are the same, shorter string comes first
+                if (namesSame) {
+                    if (nameL.length() <= nameR.length()) {
+                        arr[k] = L[i];
+                        i++;
+                    } else {
+                        arr[k] = R[j];
+                        j++;
+                    }
                 }
             } else {
-                // Sort by quantity (numerical order)
-                if (leftArr[i].quantity <= rightArr[j].quantity) {
-                    arr[k] = leftArr[i];
+                // Sort by quantity (ascending)
+                if (L[i].quantity <= R[j].quantity) {
+                    arr[k] = L[i];
                     i++;
                 } else {
-                    arr[k] = rightArr[j];
+                    arr[k] = R[j];
                     j++;
                 }
             }
             k++;
         }
         
-        // Copy any remaining elements from the left subarray
-        while (i < len1) {
-            arr[k] = leftArr[i];
+        // Copy the remaining elements of L[], if there are any
+        while (i < n1) {
+            arr[k] = L[i];
             i++;
             k++;
         }
         
-        // Copy any remaining elements from the right subarray
-        while (j < len2) {
-            arr[k] = rightArr[j];
+        // Copy the remaining elements of R[], if there are any
+        while (j < n2) {
+            arr[k] = R[j];
             j++;
             k++;
         }
         
-        // Free allocated memory for temporary arrays
-        delete[] leftArr;
-        delete[] rightArr;
+        // Free the allocated memory for temporary arrays
+        delete[] L;
+        delete[] R;
     }
 
     // Insertion sort (part of Tim Sort)
@@ -934,10 +955,39 @@ public:
             
             if (byName) {
                 // Sort by name (alphabetical order)
-                // Move elements greater than temp to one position ahead
-                while (j >= left && arr[j].name > temp.name) {
-                    arr[j + 1] = arr[j];
-                    j--;
+                // Implement case-insensitive comparison
+                while (j >= left) {
+                    // Compare names case-insensitively
+                    string nameTemp = temp.name;
+                    string nameJ = arr[j].name;
+                    bool jGreater = false;
+                    
+                    // Compare characters one by one
+                    int minLen = (nameTemp.length() < nameJ.length()) ? nameTemp.length() : nameJ.length();
+                    for (int k = 0; k < minLen; k++) {
+                        char cTemp = (nameTemp[k] >= 'A' && nameTemp[k] <= 'Z') ? nameTemp[k] + 32 : nameTemp[k];
+                        char cJ = (nameJ[k] >= 'A' && nameJ[k] <= 'Z') ? nameJ[k] + 32 : nameJ[k];
+                        
+                        if (cJ > cTemp) {
+                            jGreater = true;
+                            break;
+                        } else if (cJ < cTemp) {
+                            jGreater = false;
+                            break;
+                        }
+                    }
+                    
+                    // If all compared characters are the same, longer string is "greater"
+                    if (!jGreater && nameJ.length() > nameTemp.length() && minLen == nameTemp.length()) {
+                        jGreater = true;
+                    }
+                    
+                    if (jGreater) {
+                        arr[j + 1] = arr[j];
+                        j--;
+                    } else {
+                        break;
+                    }
                 }
             } else {
                 // Sort by quantity (numerical order)
@@ -1248,6 +1298,10 @@ public:
         int position = universalHash(id);
         int attempt = 0;
         
+        // Variables for aggregating quantities of items with the same ID
+        bool itemFound = false;
+        FoodItem* result = nullptr;
+        
         // Try all possible positions using quadratic probing
         while (attempt < TABLE_SIZE) {
             int probePos = quadraticProbing(position, attempt);
@@ -1259,44 +1313,18 @@ public:
                 FoodItem* items = tempQueue.toArray();
                 int size = tempQueue.getSize();
                 
-                // Use interpolation search for larger arrays (optimization)
-                if (size > 1) {
-                    // Create a sorted copy for interpolation search
-                    FoodItem* sortedItems = new FoodItem[size];
-                    for (int i = 0; i < size; i++) {
-                        sortedItems[i] = items[i];
-                    }
-                    
-                    // Sort by id for interpolation search (simple bubble sort)
-                    for (int i = 0; i < size; i++) {
-                        for (int j = i + 1; j < size; j++) {
-                            if (sortedItems[i].id > sortedItems[j].id) {
-                                FoodItem temp = sortedItems[i];
-                                sortedItems[i] = sortedItems[j];
-                                sortedItems[j] = temp;
-                            }
-                        }
-                    }
-                    
-                    // Find using interpolation search (faster than linear for sorted data)
-                    int pos = interpolationSearch(sortedItems, size, id);
-                    if (pos != -1) {
-                        // Create a copy of the found item
-                        FoodItem* result = new FoodItem(sortedItems[pos]);
-                        delete[] items;
-                        delete[] sortedItems;
-                        return result;
-                    }
-                    
-                    delete[] sortedItems;
-                } else {
-                    // Linear search for small arrays (more efficient for few items)
-                    for (int i = 0; i < size; i++) {
-                        if (items[i].id == id) {
-                            // Create a copy of the found item
-                            FoodItem* result = new FoodItem(items[i]);
-                            delete[] items;
-                            return result;
+                // Check all items in this bucket
+                for (int i = 0; i < size; i++) {
+                    if (items[i].id == id) {
+                        if (!itemFound) {
+                            // First time finding an item with this ID
+                            // Create a new FoodItem as the result
+                            result = new FoodItem(items[i]);
+                            itemFound = true;
+                        } else {
+                            // If we already found an item with this ID, 
+                            // update the quantity of the result
+                            result->quantity += items[i].quantity;
                         }
                     }
                 }
@@ -1309,7 +1337,8 @@ public:
             attempt++;
         }
         
-        return nullptr; // Item not found after checking all possible positions
+        // Return the aggregated result or nullptr if not found
+        return result;
     }
     
     // Remove a food item by ID
@@ -1583,17 +1612,19 @@ public:
         
         return items;
     }
-
-    
     
     // Search and display food item by ID
-    // Presents formatted information about the item if found
+    // Presents formatted information about all instances of the item if found
     void searchById(const string& id) {
-        // Find the item using the hash table lookup
-        FoodItem* item = findFoodItem(id);
+        bool found = false;
+        int totalCount = 0;
+        int totalQuantity = 0;
+        string itemName = "";
+        string category = "";
+        double price = 0.0;
         
         // Print table header
-        printHeader("Search Result");
+        printHeader("Search Result for ID: " + id);
         cout << left << setw(10) << "ID" 
              << setw(30) << "Name" 
              << setw(10) << "Price" 
@@ -1602,16 +1633,49 @@ public:
              << setw(25) << "Receive Date" << endl;
         printFooter();
         
-        // Display item if found, otherwise show not found message
-        if (item != nullptr) {
-            // Format and display the item details
-            cout << left << setw(10) << item->id 
-                 << setw(30) << item->name 
-                 << setw(10) << fixed << setprecision(2) << item->price
-                 << setw(15) << item->category
-                 << setw(10) << item->quantity 
-                 << setw(25) << item->receiveDate << endl;
-            delete item;  // Clean up allocated memory
+        // Iterate through all buckets to find all instances of this ID
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            if (hashTable[i].isEmpty()) continue;
+            
+            // Get all items in this bucket
+            ADTLinkedQueue tempQueue = hashTable[i];
+            FoodItem* items = tempQueue.toArray();
+            int size = tempQueue.getSize();
+            
+            // Check each item for matching ID
+            for (int j = 0; j < size; j++) {
+                if (items[j].id == id) {
+                    // Found a match, display it
+                    found = true;
+                    totalCount++;
+                    totalQuantity += items[j].quantity;
+                    
+                    // Store item details for summary
+                    if (itemName.empty()) {
+                        itemName = items[j].name;
+                        category = items[j].category;
+                        price = items[j].price;
+                    }
+                    
+                    // Format and display the item details
+                    cout << left << setw(10) << items[j].id 
+                         << setw(30) << items[j].name 
+                         << setw(10) << fixed << setprecision(2) << items[j].price
+                         << setw(15) << items[j].category
+                         << setw(10) << items[j].quantity 
+                         << setw(25) << items[j].receiveDate << endl;
+                }
+            }
+            
+            // Free allocated memory
+            delete[] items;
+        }
+        
+        // Show summary or not found message
+        if (found) {
+            cout << "\n----- Summary -----" << endl;
+            cout << "Found " << totalCount << " instance(s) of " << itemName << " (ID: " << id << ")" << endl;
+            cout << "Total quantity: " << totalQuantity << endl;
         } else {
             cout << "Item with ID " << id << " not found." << endl;
         }
@@ -1716,12 +1780,15 @@ public:
         }
     }
 
-    // Use (consume) a food item by ID - simplified implementation
+    // Use (consume) a food item by ID - improved implementation for duplicate IDs
     // Parameters: id - the ID of the food item to consume
     //             amount - the quantity to consume (default: 1)
     // Returns: true if successfully consumed, false if item not found or not enough quantity
     bool useFoodItem(const string& id, int amount = 1) {
         try {
+            // Ensure all inventory changes are saved before using items
+            this->saveToFile("food_items.txt");
+            
             // Search for the item info first to verify it exists and has enough quantity
             string itemName = "";
             int totalQuantity = 0;
@@ -1730,29 +1797,24 @@ public:
             for (int i = 0; i < TABLE_SIZE; i++) {
                 if (hashTable[i].isEmpty()) continue;
                 
-                // Get all items in this bucket using dequeue/enqueue method to inspect them
-                ADTLinkedQueue oldQueue;
-                int size = hashTable[i].getSize();
+                // Create a copy of the queue to inspect without modifying the original
+                ADTLinkedQueue tempQueue = hashTable[i];
+                int size = tempQueue.getSize();
+                FoodItem* items = tempQueue.toArray();
                 
-                // Remove each item from the original queue and add to temporary queue
+                // Check each item in the bucket
                 for (int j = 0; j < size; j++) {
-                    FoodItem item = hashTable[i].dequeue();
-                    oldQueue.enqueue(item);
-                    
                     // If this is the item we're looking for, accumulate quantity info
-                    if (item.id == id) {
-                        totalQuantity += item.quantity;
+                    if (items[j].id == id) {
+                        totalQuantity += items[j].quantity;
                         if (itemName.empty()) {
-                            itemName = item.name;
+                            itemName = items[j].name;
                         }
                     }
                 }
                 
-                // Restore the items back to the original bucket
-                size = oldQueue.getSize();
-                for (int j = 0; j < size; j++) {
-                    hashTable[i].enqueue(oldQueue.dequeue());
-                }
+                // Free allocated memory
+                delete[] items;
             }
             
             // Check if item exists
@@ -1800,8 +1862,47 @@ public:
                             // Fully consume this item (don't add back to queue)
                             remaining -= item.quantity;
                             // Skip re-adding it to the queue
-                            // Update total item count since an item is fully removed
-                            this->itemCount--;
+                            // Only update item count if it's the last item with this ID
+                            bool otherInstancesExist = false;
+                            
+                            // Check if other instances of this ID exist in any bucket
+                            for (int k = 0; k < TABLE_SIZE; k++) {
+                                if (k == i) continue; // Skip current bucket
+                                
+                                ADTLinkedQueue checkQueue = hashTable[k];
+                                FoodItem* checkItems = checkQueue.toArray();
+                                int checkSize = checkQueue.getSize();
+                                
+                                for (int l = 0; l < checkSize; l++) {
+                                    if (checkItems[l].id == id) {
+                                        otherInstancesExist = true;
+                                        break;
+                                    }
+                                }
+                                
+                                delete[] checkItems;
+                                if (otherInstancesExist) break;
+                            }
+                            
+                            // Also check remaining items in the current bucket's new queue
+                            if (!otherInstancesExist) {
+                                FoodItem* newQueueItems = newQueue.toArray();
+                                int newQueueSize = newQueue.getSize();
+                                
+                                for (int l = 0; l < newQueueSize; l++) {
+                                    if (newQueueItems[l].id == id) {
+                                        otherInstancesExist = true;
+                                        break;
+                                    }
+                                }
+                                
+                                delete[] newQueueItems;
+                            }
+                            
+                            // Only decrement item count if this was the last instance
+                            if (!otherInstancesExist) {
+                                this->itemCount--;
+                            }
                         }
                     } else {
                         // Not our target item or nothing left to consume, keep it as is
@@ -1830,11 +1931,8 @@ public:
             cout << "Unknown error in useFoodItem" << endl;
             return false;
         }
-    }        
+    }       
 };
-
-
-
 
 // Utility sorting and searching functions for restaurant menu system
 
@@ -2002,9 +2100,6 @@ int interpolationSearchMenuItems(MenuItem arr[], int n, const string& id) {
     
     return -1; // Element not found
 }
-
-
-
 
 class RestaurantMenuSystem {
     private:
