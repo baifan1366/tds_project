@@ -2161,6 +2161,11 @@ class RestaurantMenuSystem {
         // Destructor - linked list handles its own memory cleanup
         ~RestaurantMenuSystem() {}
 
+        // Returns the current number of menu items in the system
+        virtual int getItemCount() const override {
+            return Restaurant::getItemCount();
+        }
+
         // Adds a new menu item to the system
         // Parameters: item - the menu item to add
         // Returns: true if successfully added, false if failed (e.g., duplicate ID)
