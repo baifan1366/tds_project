@@ -353,6 +353,76 @@ struct MenuItem {
         ingredients = newIngredients;
         ingredientCount++;
     }
+
+    // Removes an ingredient from the menu item by its food item ID
+    // Returns true if found and removed, false otherwise
+    bool removeIngredient(const string& foodItemId) {
+        if (ingredientCount == 0 || ingredients == nullptr) {
+            return false;
+        }
+        
+        int removeIndex = -1;
+        
+        // Find the ingredient to remove by matching food item ID
+        for (int i = 0; i < ingredientCount; i++) {
+            // Extract food item ID from "foodItemId:quantity"
+            size_t colonPos = ingredients[i].find(":");
+            if (colonPos != string::npos) {
+                string id = ingredients[i].substr(0, colonPos);
+                if (id == foodItemId) {
+                    removeIndex = i;
+                    break;
+                }
+            }
+        }
+        
+        if (removeIndex == -1) {
+            return false; // Ingredient not found
+        }
+        
+        // Create new array with decreased size
+        string* newIngredients = nullptr;
+        if (ingredientCount > 1) {
+            newIngredients = new string[ingredientCount - 1];
+            
+            // Copy elements before the removal index
+            for (int i = 0; i < removeIndex; i++) {
+                newIngredients[i] = ingredients[i];
+            }
+            
+            // Copy elements after the removal index (skipping the removed element)
+            for (int i = removeIndex + 1; i < ingredientCount; i++) {
+                newIngredients[i - 1] = ingredients[i];
+            }
+        }
+        
+        // Delete old array to prevent memory leaks
+        delete[] ingredients;
+        
+        // Update member variables
+        ingredients = newIngredients;
+        ingredientCount--;
+        
+        return true;
+    }
+    
+    // Retrieves the required quantity of a specific ingredient
+    // Returns 0 if the ingredient is not found
+    int getIngredientQuantity(const string& foodItemId) const {
+        for (int i = 0; i < ingredientCount; i++) {
+            // Extract food item ID and quantity from "foodItemId:quantity"
+            size_t colonPos = ingredients[i].find(":");
+            if (colonPos != string::npos) {
+                string id = ingredients[i].substr(0, colonPos);
+                if (id == foodItemId) {
+                    string quantityStr = ingredients[i].substr(colonPos + 1);
+                    return stoi(quantityStr);
+                }
+            }
+        }
+        
+        return 0; // Ingredient not found
+    }
 };
 
 // Node structure for menu linked list
