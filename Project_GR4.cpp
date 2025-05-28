@@ -1584,8 +1584,6 @@ public:
         return items;
     }
 
-    
-    
     // Search and display food item by ID
     // Presents formatted information about the item if found
     void searchById(const string& id) {
@@ -1830,11 +1828,56 @@ public:
             cout << "Unknown error in useFoodItem" << endl;
             return false;
         }
-    }        
+    }
+    
+    // Log usage of food items to a history file
+    // Parameters: id - the ID of the food item that was used
+    //             amount - the quantity that was used
+    //             purpose - description of why the item was used
+    void logItemUsage(const string& id, int amount, const string& purpose) {
+        try {
+            // Retrieve the item details for complete logging
+            FoodItem* item = findFoodItem(id);
+            if (item == nullptr) {
+                cout << "Warning: Could not find item details for logging." << endl;
+                return;
+            }
+            
+            // Open the history file in append mode to maintain all previous logs
+            ofstream historyFile("usage_history.txt", ios::app);
+            if (historyFile.is_open()) {
+                // Get current time to timestamp the usage
+                time_t now = time(0);
+                string dateStr = ctime(&now);
+                // Remove the newline character from ctime output
+                if (!dateStr.empty() && dateStr[dateStr.length()-1] == '\n') {
+                    dateStr.erase(dateStr.length()-1);
+                }
+                
+                // Write entry in TXT format: timestamp,id,name,amount,purpose
+                historyFile << dateStr << ","
+                            << id << ","
+                            << item->name << ","
+                            << amount << ","
+                            << purpose << endl;
+                
+                historyFile.close();
+            } else {
+                cout << "Warning: Could not open usage history file for writing." << endl;
+            }
+            
+            // Clean up the dynamically allocated item
+            delete item;
+        } catch (const std::exception& e) {
+            // Handle standard exceptions
+            cout << "Error in logItemUsage: " << e.what() << endl;
+        } catch (...) {
+            // Handle any unexpected errors
+            cout << "Unknown error in logItemUsage" << endl;
+        }
+    }
+    
 };
-
-
-
 
 // Utility sorting and searching functions for restaurant menu system
 
