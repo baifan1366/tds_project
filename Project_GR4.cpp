@@ -2045,6 +2045,62 @@ public:
         // Close the file when done
         historyFile.close();
     }
+
+    // Add an existing food item with its current state
+    // Unlike insertFoodItem, this doesn't try to merge quantities
+    // Parameters: item - the food item to add
+    // Returns: true if successful, false if failed
+    bool addExistingFoodItem(const FoodItem& item) {
+        // Validate the item ID
+        if (item.id.empty()) {
+            cout << "Error: Food item ID cannot be empty." << endl;
+            return false;
+        }
+        
+        // Find position in hash table using the hash function
+        int position = findPosition(item.id);
+        if (position == -1) {
+            cout << "Error: Hash table is full." << endl;
+            return false;
+        }
+        
+        // Check if this is a new item ID before adding it
+        bool isNewItem = true;
+        
+        // Scan all buckets to check if this ID already exists
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            if (hashTable[i].isEmpty()) continue;
+            
+            // Get all items in this bucket
+            ADTLinkedQueue tempQueue = hashTable[i];
+            FoodItem* items = tempQueue.toArray();
+            int size = tempQueue.getSize();
+            
+            // Check each item
+            for (int j = 0; j < size; j++) {
+                if (items[j].id == item.id) {
+                    isNewItem = false;
+                    break;
+                }
+            }
+            
+            // Free allocated memory
+            delete[] items;
+            
+            if (!isNewItem) break; // No need to check other buckets
+        }
+        
+        // Always add the new item to the queue with its own timestamp
+        // This ensures FIFO ordering when consuming items
+        hashTable[position].enqueue(item);
+        
+        // If this is a new item ID, increase the item count
+        if (isNewItem) {
+            this->itemCount++;
+        }
+        
+        return true;
+    }
 };
 
 // Utility sorting and searching functions for restaurant menu system
