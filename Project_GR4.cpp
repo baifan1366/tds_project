@@ -1980,6 +1980,71 @@ public:
         }
     }
     
+    // Display usage history from log file
+    // Shows all recorded item usage in a formatted table
+    void displayUsageHistory() {
+        // Try to open the history file
+        ifstream historyFile("usage_history.txt");
+        if (!historyFile.is_open()) {
+            cout << "No usage history found." << endl;
+            return;
+        }
+        
+        // Display the table header
+        printHeader("Food Usage History");
+        cout << left << setw(25) << "Date/Time" 
+             << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Amount" 
+             << setw(30) << "Purpose" << endl;
+        printFooter();
+        
+        // Read and parse each line in the history file
+        string line;
+        while (getline(historyFile, line)) {
+            string dateTime, id, name, amount, purpose;
+            
+            // Parse TXT line format: timestamp,id,name,amount,purpose
+            size_t pos = 0;
+            
+            // Extract Date/Time
+            pos = line.find(",");
+            if (pos == string::npos) continue; // Skip malformed lines
+            dateTime = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            // Extract ID
+            pos = line.find(",");
+            if (pos == string::npos) continue; // Skip malformed lines
+            id = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            // Extract Name
+            pos = line.find(",");
+            if (pos == string::npos) continue; // Skip malformed lines
+            name = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            // Extract Amount
+            pos = line.find(",");
+            if (pos == string::npos) continue; // Skip malformed lines
+            amount = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            // The rest is purpose
+            purpose = line;
+            
+            // Display the entry in a formatted row
+            cout << left << setw(25) << dateTime 
+                 << setw(10) << id 
+                 << setw(30) << name 
+                 << setw(10) << amount 
+                 << setw(30) << purpose << endl;
+        }
+        
+        // Close the file when done
+        historyFile.close();
+    }
 };
 
 // Utility sorting and searching functions for restaurant menu system
