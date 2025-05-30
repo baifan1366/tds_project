@@ -2385,6 +2385,17 @@ class RestaurantMenuSystem {
             return menuList.findById(id);
         }
 
+        // Removes a menu item by its ID
+        // Parameters: id - the ID of the item to remove
+        // Returns: true if found and removed, false if not found
+        bool removeMenuItem(const string& id) {
+            if (menuList.removeById(id)) {
+                this->itemCount--;
+                return true;
+            }
+            return false;
+        }
+
 
         
 };
