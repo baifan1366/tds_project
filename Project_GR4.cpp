@@ -2101,6 +2101,71 @@ public:
         
         return true;
     }
+
+    // Search and display food items by name
+    // Performs a partial string match and displays all matching items
+    void searchByName(const string& name) {
+        // Print table header
+        printHeader("Search Results by Name");
+        cout << left << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Price" 
+             << setw(15) << "Category" 
+             << setw(10) << "Quantity" 
+             << setw(25) << "Receive Date" << endl;
+        printFooter();
+        
+        // Convert search name to lowercase for case-insensitive search
+        string searchNameLower = name;
+        for (size_t i = 0; i < searchNameLower.length(); i++) {
+            searchNameLower[i] = tolower(searchNameLower[i]);
+        }
+        
+        bool found = false;
+        int matchCount = 0;
+        
+        // Search directly in the hash table to see all instances
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            if (hashTable[i].isEmpty()) continue;
+            
+            // Get all items in this bucket
+            ADTLinkedQueue tempQueue = hashTable[i];
+            FoodItem* items = tempQueue.toArray();
+            int size = tempQueue.getSize();
+            
+            // Check each item
+            for (int j = 0; j < size; j++) {
+                // Convert item name to lowercase for comparison
+                string itemNameLower = items[j].name;
+                for (size_t k = 0; k < itemNameLower.length(); k++) {
+                    itemNameLower[k] = tolower(itemNameLower[k]);
+                }
+                
+                // Check if the item name contains the search string
+                if (itemNameLower.find(searchNameLower) != string::npos) {
+                    // Format and display the matching item details
+                    cout << left << setw(10) << items[j].id 
+                         << setw(30) << items[j].name 
+                         << setw(10) << fixed << setprecision(2) << items[j].price
+                         << setw(15) << items[j].category
+                         << setw(10) << items[j].quantity 
+                         << setw(25) << items[j].receiveDate << endl;
+                    found = true;
+                    matchCount++;
+                }
+            }
+            
+            // Clean up allocated memory
+            delete[] items;
+        }
+        
+        // Display message if no matches found
+        if (!found) {
+            cout << "No items found matching name \"" << name << "\"." << endl;
+        } else {
+            cout << "\nFound " << matchCount << " item(s) matching \"" << name << "\"." << endl;
+        }
+    }    
 };
 
 // Utility sorting and searching functions for restaurant menu system
