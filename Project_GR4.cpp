@@ -2396,6 +2396,26 @@ class RestaurantMenuSystem {
             return false;
         }
 
+        // Updates an existing menu item with new data
+        // Parameters: item - the updated menu item (ID must match an existing item)
+        // Returns: true if found and updated, false if not found
+        bool updateMenuItem(const MenuItem& item) {
+            // Check if the item exists first
+            MenuItem* existingItem = findMenuItem(item.id);
+            if (existingItem == nullptr) {
+                cout << "Error: Menu item with ID " << item.id << " not found." << endl;
+                return false;
+            }
+            
+            // Remove the old item and add the updated one
+            // This is a simple approach that works because we're using a linked list
+            menuList.removeById(item.id);
+            menuList.append(item);
+            
+            // Clean up the allocated memory from findMenuItem
+            delete existingItem;
+            return true;
+        }
 
         
 };
