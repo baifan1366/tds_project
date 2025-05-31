@@ -2166,6 +2166,73 @@ public:
             cout << "\nFound " << matchCount << " item(s) matching \"" << name << "\"." << endl;
         }
     }    
+
+    // Search and display food items by price range
+    // Shows all items with price between minPrice and maxPrice (inclusive)
+    void searchByPrice(double minPrice, double maxPrice) {
+        // Validate price range
+        if (minPrice < 0 || maxPrice < 0) {
+            cout << "Invalid price range. Prices must be non-negative." << endl;
+            return;
+        }
+        
+        // Swap if minPrice is greater than maxPrice
+        if (minPrice > maxPrice) {
+            double temp = minPrice;
+            minPrice = maxPrice;
+            maxPrice = temp;
+        }
+        
+        // Print table header
+        printHeader("Search Results by Price Range");
+        cout << left << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Price" 
+             << setw(15) << "Category" 
+             << setw(10) << "Quantity" 
+             << setw(25) << "Receive Date" << endl;
+        printFooter();
+        
+        bool found = false;
+        int matchCount = 0;
+        
+        // Search directly in the hash table to see all instances
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            if (hashTable[i].isEmpty()) continue;
+            
+            // Get all items in this bucket
+            ADTLinkedQueue tempQueue = hashTable[i];
+            FoodItem* items = tempQueue.toArray();
+            int size = tempQueue.getSize();
+            
+            // Check each item
+            for (int j = 0; j < size; j++) {
+                if (items[j].price >= minPrice && items[j].price <= maxPrice) {
+                    // Format and display the matching item details
+                    cout << left << setw(10) << items[j].id 
+                         << setw(30) << items[j].name 
+                         << setw(10) << fixed << setprecision(2) << items[j].price
+                         << setw(15) << items[j].category
+                         << setw(10) << items[j].quantity 
+                         << setw(25) << items[j].receiveDate << endl;
+                    found = true;
+                    matchCount++;
+                }
+            }
+            
+            // Clean up allocated memory
+            delete[] items;
+        }
+        
+        // Display message if no matches found
+        if (!found) {
+            cout << "No items found in the price range " << fixed << setprecision(2) 
+                 << minPrice << " - " << maxPrice << "." << endl;
+        } else {
+            cout << "\nFound " << matchCount << " item(s) in the price range " 
+                 << fixed << setprecision(2) << minPrice << " - " << maxPrice << "." << endl;
+        }
+    }       
 };
 
 // Utility sorting and searching functions for restaurant menu system
