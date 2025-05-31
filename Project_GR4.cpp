@@ -2799,6 +2799,36 @@ int main()
     RestaurantInventorySystem inventory;
     RestaurantMenuSystem menuSystem; 
     int choice;
+
+    if (!inventory.loadFromFile("food_items.txt")) {
+        cout << "Creating sample inventory data..." << endl;
+        
+        // Create sample food items with realistic initial values
+        // Each item is inserted into the hash table with universal hashing
+        // Format: ID, Name, Price per unit, Category, Quantity in stock
+        inventory.insertFoodItem(FoodItem("F001", "Rice", 2.50, "Grain", 100));
+        inventory.insertFoodItem(FoodItem("F002", "Chicken Breast", 5.99, "Meat", 50));
+        inventory.insertFoodItem(FoodItem("F003", "Tomatoes", 1.99, "Vegetable", 75));
+        inventory.insertFoodItem(FoodItem("F004", "Onions", 0.99, "Vegetable", 80));
+        inventory.insertFoodItem(FoodItem("F005", "Potatoes", 1.49, "Vegetable", 90));
+        inventory.insertFoodItem(FoodItem("F006", "Beef", 7.99, "Meat", 40));
+        inventory.insertFoodItem(FoodItem("F007", "Garlic", 0.50, "Spice", 60));
+        inventory.insertFoodItem(FoodItem("F008", "Salt", 0.99, "Spice", 120));
+        inventory.insertFoodItem(FoodItem("F009", "Pepper", 1.29, "Spice", 100));
+        inventory.insertFoodItem(FoodItem("F010", "Flour", 2.99, "Baking", 150));
+        inventory.insertFoodItem(FoodItem("F011", "Sugar", 2.49, "Baking", 130));
+        inventory.insertFoodItem(FoodItem("F012", "Eggs", 3.99, "Dairy", 60));
+        inventory.insertFoodItem(FoodItem("F013", "Milk", 2.79, "Dairy", 40));
+        inventory.insertFoodItem(FoodItem("F014", "Butter", 4.99, "Dairy", 30));
+        inventory.insertFoodItem(FoodItem("F015", "Cheese", 5.99, "Dairy", 25));
+        
+        // Persist sample data to file for future application launches
+        // This ensures data will be available on next startup
+        if (!inventory.saveToFile("food_items.txt")) {
+            cout << "Warning: Failed to save sample data to file. Continuing without saving." << endl;
+        }
+    }
+
     // First check for authentication
     do {
         // Clear screen for better UI experience
