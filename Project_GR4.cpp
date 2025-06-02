@@ -2685,6 +2685,164 @@ void displayUserInfo(const User& user) {
     cout << "Login Status: " << (user.isLoggedIn ? "Logged In" : "Logged Out") << endl;
 }
 
+/**
+ * Admin class for administrator users
+ * Manages admin-specific functionality and authentication
+ */
+class Admin : public User {
+private:
+    string adminId;
+    string accessLevel;
+    
+public:
+    // Constructor
+    Admin(const string& _username = "", const string& _password = "", 
+          const string& _adminId = "", const string& _accessLevel = "")
+        : User(_username, _password), adminId(_adminId), accessLevel(_accessLevel) {}
+    
+    // Getter for admin ID
+    string getAdminId() const {
+        return adminId;
+    }
+    
+    // Getter for access level
+    string getAccessLevel() const {
+        return accessLevel;
+    }
+    
+    // Setters
+    void setAdminId(const string& _adminId) {
+        adminId = _adminId;
+    }
+    
+    void setAccessLevel(const string& _accessLevel) {
+        accessLevel = _accessLevel;
+    }
+    
+    // Override login to check against admin.txt file
+    virtual bool login(const string& _username, const string& _password) override {
+        ifstream file("admin.txt");
+        if (!file.is_open()) {
+            cout << "Error: Could not open admin credentials file." << endl;
+            return false;
+        }
+        
+        string line;
+        bool found = false;
+        
+        // Format: username,password,adminId,accessLevel
+        while (getline(file, line)) {
+            size_t pos = line.find(",");
+            if (pos == string::npos) continue;
+            
+            string fileUsername = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            pos = line.find(",");
+            if (pos == string::npos) continue;
+            
+            string filePassword = line.substr(0, pos);
+            line.erase(0, pos + 1);
+            
+            pos = line.find(",");
+            if (pos == string::npos) continue;
+            
+            string fileAdminId = line.substr(0, pos);
+            string fileAccessLevel = line.substr(pos + 1);
+            
+            if (fileUsername == _username && filePassword == _password) {
+                username = fileUsername;
+                password = filePassword;
+                adminId = fileAdminId;
+                accessLevel = fileAccessLevel;
+                isLoggedIn = true;
+                found = true;
+                break;
+            }
+        }
+        
+        file.close();
+        
+        if (!found) {
+            cout << "Invalid username or password for admin login." << endl;
+        } else {
+            cout << "Admin login successful. Welcome " << username << "!" << endl;
+        }
+        
+        return found;
+    }
+    
+    // Override logout with admin-specific message
+    virtual void logout() override {
+        isLoggedIn = false;
+        cout << "Administrator " << username << " logged out successfully." << endl;
+    }
+    
+    // Override register to save to admin.txt file
+    virtual bool registerAccount(const string& _username, const string& _password) override {
+        return registerAccount(_username, _password, "", "Standard");
+    }
+    
+    // Override overloaded registerAccount with admin-specific parameters
+    virtual bool registerAccount(const string& _username, const string& _password, 
+                                const string& _adminId, const string& _accessLevel) {
+        // Check if username already exists
+        ifstream checkFile("admin.txt");
+        if (checkFile.is_open()) {
+            string line;
+            while (getline(checkFile, line)) {
+                size_t pos = line.find(",");
+                if (pos != string::npos) {
+                    string existingUsername = line.substr(0, pos);
+                    if (existingUsername == _username) {
+                        cout << "Error: Username already exists." << endl;
+                        checkFile.close();
+                        return false;
+                    }
+                }
+            }
+            checkFile.close();
+        }
+        
+        // Save to admin.txt
+        ofstream file("admin.txt", ios::app);
+        if (!file.is_open()) {
+            cout << "Error: Could not open admin credentials file for writing." << endl;
+            return false;
+        }
+        
+        // Update member variables
+        username = _username;
+        password = _password;
+        adminId = _adminId;
+        accessLevel = _accessLevel;
+        
+        // Write to file
+        file << username << "," << password << "," << adminId << "," << accessLevel << endl;
+        file.close();
+        
+        cout << "Admin account registered successfully." << endl;
+        return true;
+    }
+    
+    // Overload the original virtual registerAccount with role parameter
+    virtual bool registerAccount(const string& _username, const string& _password, const string& role) override {
+        // For admin, we ignore the role parameter and use default access level
+        return registerAccount(_username, _password, "", "Standard");
+    }
+    
+    // Friend function to display admin details with access to private members
+    friend void displayAdminDetails(const Admin& admin);
+};
+
+// Friend function implementation for Admin class
+void displayAdminDetails(const Admin& admin) {
+    cout << "=== Admin Details ===" << endl;
+    cout << "Username: " << admin.username << endl;
+    cout << "Admin ID: " << admin.adminId << endl;
+    cout << "Access Level: " << admin.accessLevel << endl;
+    cout << "Login Status: " << (admin.isLoggedIn ? "Logged In" : "Logged Out") << endl;
+}
 
 /**
  * Authentication Manager class to handle user login and registration
