@@ -2484,7 +2484,15 @@ class RestaurantMenuSystem {
             return true;
         }
 
-        
+        // Saves menu items to a TXT file
+        // Parameters: filename - path to the file to save to
+        //             sorted - if true, items will be sorted before saving
+        //             sortBy - criteria to sort by ("name", "price", or "category")
+        // Returns: true if successful, false if failed to open file
+        // Implementation of the pure virtual method from base class
+        virtual bool saveToFile(const string& filename, bool sorted = false) override {
+            return saveToFile(filename, sorted, "name");
+        }
 
         // Overloaded version with additional sortBy parameter
         bool saveToFile(const string& filename, bool sorted, const string& sortBy) {
