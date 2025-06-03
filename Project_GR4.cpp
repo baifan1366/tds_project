@@ -2950,6 +2950,403 @@ public:
     }
 };
 
+/**
+ * Handle inventory management functionality
+ * This function encapsulates all inventory-related operations
+ * @param inventory Reference to the inventory system to manage
+ */
+void manageInventory(RestaurantInventorySystem& inventory) {
+    int inventoryChoice;
+    do {
+        // Clear screen and display inventory management options
+        RestaurantInventorySystem::clearScreen();
+        cout << "\n==== Inventory Management ====" << endl;
+        
+        // Basic operations for viewing and adding inventory items
+        cout << "1. Display Unsorted Data" << endl;
+        cout << "2. Add New Food Item" << endl;
+        cout << "3. Add Existing Food Item" << endl;
+        cout << "4. Sort By Name" << endl;
+        cout << "5. Sort By Quantity" << endl;
+        cout << "6. Use Food Item / Prepare Menu Item" << endl;
+        // Update search options section
+        // Multiple search methods to find items efficiently
+        cout << "\n-- Search Options --" << endl;
+        cout << "7. Search By ID" << endl;
+        cout << "8. Search By Name" << endl;
+        cout << "9. Search By Price Range" << endl;
+        
+        // Additional operations for advanced inventory management
+        cout << "\n-- Other Options --" << endl;
+        cout << "10. Save Sorted Data" << endl;
+        cout << "11. Display Queue Structure" << endl;
+        cout << "12. Display Specific Queue" << endl;
+        cout << "13. Display Usage History" << endl;
+        
+        cout << "0. Back to Main Menu" << endl;
+        cout << "Enter your choice: ";
+        cin >> inventoryChoice;
+        
+        // Process inventory submenu selection
+        switch (inventoryChoice) {
+            case 1: {
+                // Display all inventory items in their original order
+                RestaurantInventorySystem::clearScreen();
+                inventory.displayAll();
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 2: {
+                // Add a new food item to inventory with user input
+                RestaurantInventorySystem::clearScreen();
+                string id, name, category;
+                double price;
+                int quantity;
+                bool isValid = false;
+                
+                // Collect all necessary information about the new food item
+                cout << "==== Add New Food Item ====" << endl;
+                
+                // Validate ID format
+                do {
+                    cout << "Enter ID (format: 1 letter followed by 3 digits): ";
+                    cin >> id;
+                    
+                    if (!ValidationCheck::isValidID(id)) {
+                        ValidationCheck::showError("ID must be 1 letter followed by 3 digits (e.g. F123)");
+                    } else {
+                        isValid = true;
+                    }
+                } while (!isValid);
+                
+                // check if the id already exists
+                FoodItem* existingItem = inventory.findFoodItem(id);
+                if (existingItem != nullptr) {
+                    ValidationCheck::showError("Food Item Id " + id + " already exists, please use another ID");
+                    delete existingItem;
+                    cout << "\nPress any key to continue...";
+                    getch();
+                    break;
+                }
+                
+                cin.ignore();
+                
+                // Validate name length
+                isValid = false;
+                do {
+                    cout << "Enter Name (3-30 characters): ";
+                    getline(cin, name);
+                    
+                    if (!ValidationCheck::isValidStringLength(name, 3, 30)) {
+                        ValidationCheck::showError("Name length must be between 3 and 30 characters");
+                    } else {
+                        isValid = true;
+                    }
+                } while (!isValid);
+                
+                // Validate price
+                isValid = false;
+                do {
+                    cout << "Enter Price (minimum 1.00): ";
+                    cin >> price;
+                    
+                    if (!ValidationCheck::isValidPrice(price)) {
+                        ValidationCheck::showError("Price must be at least 1.00 with maximum 2 decimal places");
+                    } else {
+                        isValid = true;
+                    }
+                } while (!isValid);
+                
+                cout << "Enter Category: ";
+                cin.ignore();
+                getline(cin, category);
+                
+                // Validate quantity
+                isValid = false;
+                do {
+                    cout << "Enter Quantity (1-999): ";
+                    cin >> quantity;
+                    
+                    if (!ValidationCheck::isValidQuantity(quantity)) {
+                        ValidationCheck::showError("Quantity must be between 1 and 999");
+                    } else {
+                        isValid = true;
+                    }
+                } while (!isValid);
+                
+                // Create and insert the new food item into inventory
+                FoodItem item(id, name, price, category, quantity);
+                if (inventory.insertFoodItem(item)) {
+                    cout << "\nFood item added successfully!" << endl;
+                    
+                    // Save to file after adding to ensure data persistence
+                    if (!inventory.saveToFile("food_items.txt")) {
+                        cout << "Warning: Failed to save changes to file." << endl;
+                    }
+                } else {
+                    cout << "\nFailed to add food item." << endl;
+                }
+                
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 3: {
+                // Add quantity to an existing food item
+                RestaurantInventorySystem::clearScreen();
+                string id;
+                int quantity;
+                bool isValid = false;
+                
+                cout << "==== Add Existing Food Item ====" << endl;
+                cout << "Enter ID of existing item: ";
+                cin >> id;
+                
+                // Check if the item exists
+                FoodItem* existingItem = inventory.findFoodItem(id);
+                if (existingItem == nullptr) {
+                    cout << "\nError: Food item with ID " << id << " not found." << endl;
+                } else {
+                    cout << "Found: " << existingItem->name << " (Current quantity: " << existingItem->quantity << ")" << endl;
+                    
+                    // Validate quantity
+                    do {
+                        cout << "Enter additional quantity (1-999): ";
+                        cin >> quantity;
+                        
+                        if (!ValidationCheck::isValidQuantity(quantity)) {
+                            ValidationCheck::showError("Quantity must be between 1 and 999");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    // Create a new instance of the item with current timestamp
+                    FoodItem newItem(existingItem->id, existingItem->name, existingItem->price, existingItem->category, quantity);
+                    
+                    if (inventory.addExistingFoodItem(newItem)) {
+                        cout << "\nAdditional quantity added successfully!" << endl;
+                        cout << "New batch of " << quantity << " " << existingItem->name << " added with current timestamp." << endl;
+                        
+                        // Save to file after adding
+                        if (!inventory.saveToFile("food_items.txt")) {
+                            cout << "Warning: Failed to save changes to file." << endl;
+                        }
+                    } else {
+                        cout << "\nFailed to add additional quantity." << endl;
+                    }
+                    
+                    delete existingItem;
+                }
+                
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 4: {
+                // Display inventory sorted alphabetically by name
+                RestaurantInventorySystem::clearScreen();
+                inventory.displaySorted(true); // true = sort by name (alphabetical)
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 5: {
+                // Display inventory sorted by quantity (ascending)
+                RestaurantInventorySystem::clearScreen();
+                inventory.displaySorted(false); // false = sort by quantity
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 6: {
+                // Consume inventory items (either directly or via menu item)
+                RestaurantInventorySystem::clearScreen();
+                char choice;
+                
+                cout << "==== Use Food Item ====" << endl;
+                cout << "1. Use individual food item" << endl;
+                cout << "2. Prepare a menu item (use all ingredients)" << endl;
+                cout << "Enter your choice (1-2): ";
+                cin >> choice;
+                
+                if (choice == '1') {
+                    // Individual food item usage option
+                    string id, purpose;
+                    int amount;
+                    bool isValid = false;
+                    
+                    RestaurantInventorySystem::clearScreen();
+                    cout << "==== Use Individual Food Item ====" << endl;
+                    cout << "Enter ID of item to use: ";
+                    cin >> id;
+                    
+                    // Validate amount
+                    do {
+                        cout << "Enter amount to use (1-999): ";
+                        cin >> amount;
+                        
+                        if (!ValidationCheck::isValidQuantity(amount)) {
+                            ValidationCheck::showError("Quantity must be between 1 and 999");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    cin.ignore();
+                    
+                    cout << "Enter purpose (e.g., recipe name): ";
+                    getline(cin, purpose);
+                    
+                    try {
+                        if (inventory.useFoodItem(id, amount)) {
+                            inventory.logItemUsage(id, amount, purpose);
+                            cout << "\nUsage logged successfully!" << endl;
+                            
+                            // Save changes to file
+                            if (!inventory.saveToFile("food_items.txt")) {
+                                cout << "Warning: Failed to save changes to file." << endl;
+                            }
+                        }
+                    } catch (const std::bad_alloc& e) {
+                        cout << "\nMemory allocation error: " << e.what() << endl;
+                        cout << "Please try again with a smaller amount or restart the application." << endl;
+                    } catch (const std::exception& e) {
+                        cout << "\nError: " << e.what() << endl;
+                    } catch (...) {
+                        cout << "\nUnexpected error occurred." << endl;
+                    }
+                } else if (choice == '2') {
+                    // Menu item preparation option
+                    RestaurantMenuSystem tempMenuSystem;
+                    if (!tempMenuSystem.loadFromFile("menu_items.txt")) {
+                        cout << "\nError: Could not load menu items." << endl;
+                    } else {
+                        string id, purpose;
+                        
+                        RestaurantInventorySystem::clearScreen();
+                        cout << "==== Prepare Menu Item ====" << endl;
+                        
+                        // Display available menu items
+                        tempMenuSystem.displayAll();
+                        
+                        cout << "\nEnter ID of menu item to prepare: ";
+                        cin >> id;
+                        cin.ignore();
+                        
+                        cout << "Enter purpose (e.g., Customer Order): ";
+                        getline(cin, purpose);
+                        
+                        if (tempMenuSystem.prepareMenuItem(id, inventory, purpose)) {
+                            cout << "\nMenu item prepared successfully!" << endl;
+                            
+                            // Save inventory changes to file
+                            if (!inventory.saveToFile("food_items.txt")) {
+                                cout << "Warning: Failed to save inventory changes to file." << endl;
+                            }
+                        }
+                    }
+                } else {
+                    cout << "\nInvalid choice." << endl;
+                }
+                
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 7: {
+                // Search for a food item by its unique ID
+                RestaurantInventorySystem::clearScreen();
+                string id;
+                cout << "==== Search Food Item ====" << endl;
+                cout << "Enter ID to search: ";
+                cin >> id;
+                
+                inventory.searchById(id);
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 8: {
+                // Search for food items by name (partial match)
+                RestaurantInventorySystem::clearScreen();
+                string name;
+                cout << "==== Search Food Item by Name ====" << endl;
+                cout << "Enter name to search: ";
+                cin.ignore();
+                getline(cin, name);
+                
+                inventory.searchByName(name);
+                
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 9: {
+                // Search for food items within a price range
+                RestaurantInventorySystem::clearScreen();
+                double minPrice, maxPrice;
+                cout << "==== Search Food Item by Price Range ====" << endl;
+                cout << "Enter minimum price: $";
+                cin >> minPrice;
+                cout << "Enter maximum price: $";
+                cin >> maxPrice;
+                
+                inventory.searchByPrice(minPrice, maxPrice);
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 10: {
+                // Save current inventory data to file (with sorting option)
+                RestaurantInventorySystem::clearScreen();
+                inventory.saveToFile("sorted_information.txt", true);
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 11: {
+                // Display queue data structure with all buckets
+                RestaurantInventorySystem::clearScreen();
+                inventory.displayAllQueues();
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 12: {
+                // Display a specific hash bucket (queue)
+                RestaurantInventorySystem::clearScreen();
+                int bucketIndex;
+                cout << "==== Display Specific Queue ====" << endl;
+                cout << "Enter bucket index (0-" << RestaurantInventorySystem::MAX_BUCKETS - 1 << "): ";
+                cin >> bucketIndex;
+                
+                inventory.displayQueue(bucketIndex);
+                
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 13: {
+                // Display history of inventory usage
+                RestaurantInventorySystem::clearScreen();
+                inventory.displayUsageHistory();
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 0:
+                cout << "Returning to main menu..." << endl;
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+                cout << "\nPress any key to continue...";
+                getch();
+        }
+    } while (inventoryChoice != 0);
+}
+
 int main()
 {   
     AuthManager authManager;
