@@ -2485,6 +2485,66 @@ class RestaurantMenuSystem {
         }
 
         
+
+        // Overloaded version with additional sortBy parameter
+        bool saveToFile(const string& filename, bool sorted, const string& sortBy) {
+            ofstream file(filename);
+            if (!file.is_open()) {
+                cout << "Error: Could not open file " << filename << " for writing" << endl;
+                return false;
+            }
+            
+            // Get all menu items as a array from the linked list
+            MenuItem* items = getAllItems();
+            
+            // Check if items were properly allocated
+            if (items == nullptr && this->itemCount > 0) {
+                cout << "Error: Failed to allocate memory for menu items." << endl;
+                file.close();
+                return false;
+            }
+            
+            // Sort items if requested
+            if (sorted && this->itemCount > 0 && items != nullptr) {
+                // Use Tim Sort with the specified sort criteria
+                timSortMenuItems(items, this->itemCount, sortBy);
+            }
+            
+            // Write items to file in TXT format
+            if (this->itemCount > 0 && items != nullptr) {
+                for (int i = 0; i < this->itemCount; i++) {
+                    // Write basic properties in TXT format
+                    file << items[i].id << ","
+                        << items[i].name << ","
+                        << items[i].price << ","
+                        << items[i].description << ","
+                        << items[i].category;
+                    
+                    // Add ingredients if any in our special format
+                    if (items[i].ingredientCount > 0) {
+                        file << ",";
+                        for (int j = 0; j < items[i].ingredientCount; j++) {
+                            file << items[i].ingredients[j];
+                            if (j < items[i].ingredientCount - 1) {
+                                file << "|"; // Separate ingredients with pipe
+                            }
+                        }
+                    }
+                    
+                    file << endl;
+                }
+                delete[] items;
+            } else {
+                // Write an empty file if no items
+                cout << "No menu items to save to file." << endl;
+            }
+            
+            file.close();
+            cout << "Successfully saved " << this->itemCount << " menu items to " << filename << endl;
+            return true;
+        }
+
+        
 };
 
 
