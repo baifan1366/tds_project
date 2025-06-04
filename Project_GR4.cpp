@@ -3488,6 +3488,40 @@ int main()
             cout << "0. Exit" << endl;
             cout << "Enter your choice: ";
             cin >> choice;
+
+            switch (choice) {
+                case 1: {
+                    // Staff login
+                    string username, password;
+                    cout << "\nStaff Login" << endl;
+                    cout << "Username: ";
+                    cin >> username;
+                    cout << "Password: ";
+                    cin >> password;
+                    
+                    if (authManager.login(username, password, false)) {
+                        isAuthenticated = true;
+                        cout << "\nLogin successful. Press any key to enter Inventory Management...";
+                        getch();
+                        // Directly go to inventory management for staff users
+                        manageInventory(inventory);
+                    } else {
+                        cout << "\nPress any key to continue...";
+                        getch();
+                    }
+                    break;
+                }
+            }
+
+            // If exit was chosen, break out of the outer loop as well
+            if (choice == 0) {
+                break;
+            }
+            
+            // Skip the rest of the loop if not authenticated yet
+            if (!isAuthenticated) {
+                continue;
+            }
         }
     } while (choice != 0);
 
