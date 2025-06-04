@@ -2552,6 +2552,39 @@ class RestaurantMenuSystem {
             return true;
         }
 
+        // Displays all menu items in a formatted table
+        // Shows ID, name, price, category, and description for each item
+        virtual void displayAll() override {
+            // Print table header using base class method
+            printHeader("Restaurant Menu System - All Items");
+            cout << left << setw(10) << "ID" 
+                << setw(30) << "Name" 
+                << setw(10) << "Price" 
+                << setw(20) << "Category" 
+                << setw(30) << "Description" << endl;
+            RestaurantInventorySystem::printFooter();
+            
+            // Get all menu items from the linked list
+            MenuItem* items = getAllItems();
+            
+            // Handle empty menu case
+            if (this->itemCount == 0) {
+                cout << "No items in the menu." << endl;
+            } else {
+                // Display each item with formatted columns
+                for (int i = 0; i < this->itemCount; i++) {
+                    cout << left << setw(10) << items[i].id 
+                        << setw(30) << items[i].name 
+                        << setw(10) << fixed << setprecision(2) << items[i].price
+                        << setw(20) << items[i].category
+                        << setw(30) << items[i].description << endl;
+                }
+            }
+            
+            // Clean up allocated memory
+            delete[] items;
+        }
+
         
 };
 
