@@ -2595,6 +2595,43 @@ class RestaurantMenuSystem {
             }
         }
 
+        // Displays all menu items sorted by name
+        // Items are sorted alphabetically by name
+        void displaySortedByName() {
+            // Print table header using base class method
+            printHeader("Restaurant Menu System - Sorted by Name");
+            
+            cout << left << setw(10) << "ID" 
+                << setw(30) << "Name" 
+                << setw(10) << "Price" 
+                << setw(20) << "Category" 
+                << setw(30) << "Description" << endl;
+            RestaurantInventorySystem::printFooter();
+            
+            // Get all menu items as a array from the linked list
+            MenuItem* items = getAllItems();
+            
+            // Handle empty menu case
+            if (this->itemCount == 0) {
+                cout << "No items in the menu." << endl;
+            } else {
+                // Sort items by name using Tim Sort algorithm
+                timSortMenuItems(items, this->itemCount, "name");
+                
+                // Display each item with formatted columns
+                for (int i = 0; i < this->itemCount; i++) {
+                    cout << left << setw(10) << items[i].id 
+                        << setw(30) << items[i].name 
+                        << setw(10) << fixed << setprecision(2) << items[i].price
+                        << setw(20) << items[i].category
+                        << setw(30) << items[i].description << endl;
+                }
+            }
+            
+            // Clean up allocated memory
+            delete[] items;
+        }
+
         
 };
 
