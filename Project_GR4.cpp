@@ -2585,6 +2585,16 @@ class RestaurantMenuSystem {
             delete[] items;
         }
 
+        // Displays all menu items sorted by specified criteria
+        // Implementation of pure virtual method from base class
+        virtual void displaySorted(bool byName = true) override {
+            if (byName) {
+                displaySortedByName();
+            } else {
+                displaySortedByPrice();
+            }
+        }
+
         
 };
 
