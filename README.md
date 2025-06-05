@@ -77,7 +77,6 @@ The system provides an interactive console interface with clear menu options:
 
 - add registration and login&logout module for staff and admin (staff.txt,admin.txt)
 - change two system to staff and admin module
-- admin module add manage admin and staff
 - add more search and sort (by date and by category)
 - add overloaded/overridden functions (need 4)
 - change 2 base classes (res,user)
