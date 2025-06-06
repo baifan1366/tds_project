@@ -2632,6 +2632,42 @@ class RestaurantMenuSystem {
             delete[] items;
         }
 
+        // Displays all menu items sorted by price (low to high)
+        // Items are sorted in ascending order by price
+        void displaySortedByPrice() {
+            // Print table header using base class method
+            printHeader("Restaurant Menu System - Sorted by Price (Low to High)");
+            
+            cout << left << setw(10) << "ID" 
+                << setw(30) << "Name" 
+                << setw(10) << "Price" 
+                << setw(20) << "Category" 
+                << setw(30) << "Description" << endl;
+            RestaurantInventorySystem::printFooter();
+            
+            // Get all menu items from the linked list
+            MenuItem* items = getAllItems();
+            
+            // Handle empty menu case
+            if (this->itemCount == 0) {
+                cout << "No items in the menu." << endl;
+            } else {
+                // Sort items by price using Tim Sort algorithm
+                timSortMenuItems(items, this->itemCount, "price");
+                
+                // Display each item with formatted columns
+                for (int i = 0; i < this->itemCount; i++) {
+                    cout << left << setw(10) << items[i].id 
+                        << setw(30) << items[i].name 
+                        << setw(10) << fixed << setprecision(2) << items[i].price
+                        << setw(20) << items[i].category
+                        << setw(30) << items[i].description << endl;
+                }
+            }
+            
+            // Clean up allocated memory
+            delete[] items;
+        }
         
 };
 
