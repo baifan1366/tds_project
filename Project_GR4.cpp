@@ -3641,8 +3641,173 @@ int main()
                     }
                     break;
                 }
+                case 2: {
+                    // Admin login
+                    string username, password;
+                    cout << "\nAdmin Login" << endl;
+                    cout << "Username: ";
+                    cin >> username;
+                    cout << "Password: ";
+                    cin >> password;
+                    
+                    if (authManager.login(username, password, true)) {
+                        isAuthenticated = true;
+                        cout << "\nLogin successful. Press any key to enter Menu Management...";
+                        getch();
+                        //standard admin or full admin
+                        if(authManager.isFullAdmin()){
+                            // Directly go to all management for full admin users
+                            manageAll(menuSystem, inventory);
+                        }else{
+                            // Directly go to menu management for standard admin users
+                            manageMenu(menuSystem, inventory);
+                        }
+                    } else {
+                        cout << "\nPress any key to continue...";
+                        getch();
+                    }
+                    break;
+                }
+                case 3: {
+                    // Register staff account
+                    string username, password, staffId, position;
+                    bool isValid = false;
+                    
+                    cout << "\nStaff Registration" << endl;
+                    
+                    // Validate username
+                    do {
+                        cout << "Username (5-20 characters, alphanumeric with underscore): ";
+                        cin >> username;
+                        
+                        if (!ValidationCheck::isValidUsername(username)) {
+                            ValidationCheck::showError("Username must be 5-20 characters and contain only letters, numbers, and underscore");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    // Validate password
+                    isValid = false;
+                    do {
+                        cout << "Password (6-20 characters, must contain at least one letter and one number): ";
+                        cin >> password;
+                        
+                        if (!ValidationCheck::isValidPassword(password)) {
+                            ValidationCheck::showError("Password must be 6-20 characters and contain at least one letter and one number");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    // Validate Staff ID
+                    isValid = false;
+                    do {
+                        cout << "Staff ID (format: S followed by 3 digits, e.g. S001): ";
+                        cin >> staffId;
+                        
+                        if (!ValidationCheck::isValidStaffAdminID(staffId, false)) {
+                            ValidationCheck::showError("Staff ID must start with 'S' followed by 3 digits (e.g. S001)");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    cin.ignore();
+                    
+                    // Validate position
+                    isValid = false;
+                    do {
+                        cout << "Position (3-20 characters): ";
+                        getline(cin, position);
+                        
+                        if (!ValidationCheck::isValidStringLength(position, 3, 20)) {
+                            ValidationCheck::showError("Position must be between 3 and 20 characters");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    authManager.registerStaff(username, password, staffId, position);
+                    cout << "\nPress any key to continue...";
+                    getch();
+                    break;
+                }
+                case 4: {
+                    // Register admin account
+                    string username, password, adminId, accessLevel;
+                    bool isValid = false;
+                    
+                    cout << "\nAdmin Registration" << endl;
+                    
+                    // Validate username
+                    do {
+                        cout << "Username (5-20 characters, alphanumeric with underscore): ";
+                        cin >> username;
+                        
+                        if (!ValidationCheck::isValidUsername(username)) {
+                            ValidationCheck::showError("Username must be 5-20 characters and contain only letters, numbers, and underscore");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    // Validate password
+                    isValid = false;
+                    do {
+                        cout << "Password (6-20 characters, must contain at least one letter and one number): ";
+                        cin >> password;
+                        
+                        if (!ValidationCheck::isValidPassword(password)) {
+                            ValidationCheck::showError("Password must be 6-20 characters and contain at least one letter and one number");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    // Validate Admin ID
+                    isValid = false;
+                    do {
+                        cout << "Admin ID (format: A followed by 3 digits, e.g. A001): ";
+                        cin >> adminId;
+                        
+                        if (!ValidationCheck::isValidStaffAdminID(adminId, true)) {
+                            ValidationCheck::showError("Admin ID must start with 'A' followed by 3 digits (e.g. A001)");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    cin.ignore();
+                    
+                    // Validate access level
+                    isValid = false;
+                    do {
+                        cout << "Access Level (Standard/Full): ";
+                        getline(cin, accessLevel);
+                        
+                        if (accessLevel != "Standard" && accessLevel != "Full") {
+                            ValidationCheck::showError("Access Level must be either 'Standard' or 'Full'");
+                        } else {
+                            isValid = true;
+                        }
+                    } while (!isValid);
+                    
+                    authManager.registerAdmin(username, password, adminId, accessLevel);
+                    cout << "\nPress any key to continue...";
+                    getch();
+                    break;
+                }
+                case 0:
+                    cout << "Exiting program..." << endl;
+                    break;
+                default:
+                    cout << "Invalid choice. Please try again." << endl;
+                    cout << "\nPress any key to continue...";
+                    getch();
+                    break;
             }
-
+            
             // If exit was chosen, break out of the outer loop as well
             if (choice == 0) {
                 break;
