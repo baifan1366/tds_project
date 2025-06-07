@@ -3891,8 +3891,77 @@ int main()
                 continue;
             }
         }
+        // Display main navigation menu with role-specific options
+        RestaurantInventorySystem::clearScreen();
+        cout << "\n==== Restaurant Management System ====" << endl;
+        cout << "Logged in as: " << authManager.getCurrentUsername() << 
+            (authManager.isAdminLoggedIn() ? " (Admin)" : " (Staff)") << endl;
+        
+        // Show different options based on user role
+        if (authManager.isAdminLoggedIn()) {
+            if(authManager.isFullAdmin()){
+                // Full admin can access all management
+                cout << "1. All Management" << endl;
+            }else{
+                // Standard admin can only access menu management
+                cout << "1. Menu Management" << endl;
+            }
+            cout << "2. Logout" << endl;
+            cout << "0. Exit" << endl;
+        } else {
+            // Staff can only access inventory management
+            cout << "1. Inventory Management" << endl;
+            cout << "2. Logout" << endl;
+            cout << "0. Exit" << endl;
+        }
+        
+        cout << "Enter your choice: ";
+        cin >> choice;
+        
+        // Process user selection based on role
+        switch (choice) {
+            case 0:
+                cout << "Exiting program..." << endl;
+                break;
+                
+            case 1:
+                if (authManager.isAdminLoggedIn()) {
+                    if(authManager.isFullAdmin()){
+                        // Full admin can access all management
+                        manageAll(menuSystem, inventory);
+                    }else{
+                        // Standard admin can only access menu management
+                        manageMenu(menuSystem, inventory);
+                    }
+                } else {
+                    // Inventory Management for staff
+                    manageInventory(inventory);
+                }
+                break;
+                
+            case 2:
+                // Logout functionality
+                RestaurantInventorySystem::clearScreen();
+                cout << "==== Logout ====" << endl;
+                cout << "Logging out user: " << authManager.getCurrentUsername() << endl;
+                
+                authManager.logout();
+                isAuthenticated = false;
+                
+                cout << "\nLogout successful. You have been securely logged out." << endl;
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+                
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+        }
     } while (choice != 0);
-
+    
+    // Return 0 to indicate successful program execution 
+    // All memory cleanup is handled by class destructors automatically
     return 0;
-}
-
+} 
