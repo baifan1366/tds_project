@@ -2705,6 +2705,12 @@ class RestaurantMenuSystem {
             // Clean up allocated memory
             delete[] items;
         }
+
+        // Returns all menu items as a dynamically allocated array
+        // Caller is responsible for deleting the returned array
+        MenuItem* getAllItems() const {
+            return menuList.toArray();
+        }
         
 };
 
