@@ -2711,6 +2711,54 @@ class RestaurantMenuSystem {
         MenuItem* getAllItems() const {
             return menuList.toArray();
         }
+
+        // Searches for and displays a menu item by its ID
+        // Parameters: id - the ID of the menu item to find
+        void searchById(const string& id) {
+            // Find the menu item
+            MenuItem* item = findMenuItem(id);
+            
+            // Print table header
+            RestaurantInventorySystem::printHeader("Menu Item Search Result");
+            cout << left << setw(10) << "ID" 
+                << setw(30) << "Name" 
+                << setw(10) << "Price" 
+                << setw(20) << "Category" 
+                << setw(30) << "Description" << endl;
+            RestaurantInventorySystem::printFooter();
+            
+            // Display item if found, or show not found message
+            if (item != nullptr) {
+                // Display the basic menu item information
+                cout << left << setw(10) << item->id 
+                    << setw(30) << item->name 
+                    << setw(10) << fixed << setprecision(2) << item->price
+                    << setw(20) << item->category
+                    << setw(30) << item->description << endl;
+                    
+                // Display ingredients if any
+                if (item->ingredientCount > 0) {
+                    cout << "\nIngredients Required:\n";
+                    cout << left << setw(15) << "Food ID" << setw(10) << "Quantity" << endl;
+                    cout << string(25, '-') << endl;
+                    
+                    // Parse and display each ingredient
+                    for (int i = 0; i < item->ingredientCount; i++) {
+                        size_t colonPos = item->ingredients[i].find(":");
+                        if (colonPos != string::npos) {
+                            string foodId = item->ingredients[i].substr(0, colonPos);
+                            string quantity = item->ingredients[i].substr(colonPos + 1);
+                            cout << left << setw(15) << foodId << setw(10) << quantity << endl;
+                        }
+                    }
+                }
+                
+                // Clean up allocated memory
+                delete item;
+            } else {
+                cout << "Menu item with ID " << id << " not found." << endl;
+            }
+        }
         
 };
 
