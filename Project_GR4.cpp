@@ -2759,6 +2759,89 @@ class RestaurantMenuSystem {
                 cout << "Menu item with ID " << id << " not found." << endl;
             }
         }
+
+            /**
+     * Displays detailed information about a menu item including its ingredients
+     * This method provides a comprehensive view of a menu item with real-time inventory status
+     * Parameters: id - The unique identifier of the menu item to display
+     * Parameters: inventory - Reference to the inventory system to check ingredients availability
+     */
+    void displayMenuItem(const string& id, RestaurantInventorySystem& inventory) {
+        // Ensure inventory data is up-to-date
+        inventory.saveToFile("food_items.txt");
+        
+        // Retrieve the menu item by its ID
+        MenuItem* item = findMenuItem(id);
+        
+        // Validate if the item exists in the menu
+        if (item == nullptr) {
+            cout << "Menu item with ID " << id << " not found." << endl;
+            return;
+        }
+        
+        // Display the header and basic information about the menu item
+        RestaurantInventorySystem::printHeader("Menu Item Details");
+        cout << "ID: " << item->id << endl;
+        cout << "Name: " << item->name << endl;
+        cout << "Price: $" << fixed << setprecision(2) << item->price << endl;
+        cout << "Category: " << item->category << endl;
+        cout << "Description: " << item->description << endl;
+        
+        // Check if the menu item has ingredients and display them
+        if (item->ingredientCount > 0) {
+            cout << "\nIngredients Required:\n";
+            // Create a well-formatted table header for ingredients information
+            cout << left << setw(10) << "ID" 
+                 << setw(30) << "Name" 
+                 << setw(10) << "Quantity" 
+                 << setw(15) << "Available" 
+                 << setw(15) << "Status" << endl;
+            cout << string(80, '-') << endl;
+            
+            // Process and display each ingredient with its availability status
+            for (int i = 0; i < item->ingredientCount; i++) {
+                // Parse the ingredient string format "foodId:quantity"
+                size_t colonPos = item->ingredients[i].find(":");
+                if (colonPos != string::npos) {
+                    // Extract food ID and required quantity
+                    string foodId = item->ingredients[i].substr(0, colonPos);
+                    int quantity = stoi(item->ingredients[i].substr(colonPos + 1));
+                    
+                    // Query the inventory system for real-time information about this ingredient
+                    FoodItem* foodItem = inventory.findFoodItem(foodId);
+                    
+                    if (foodItem != nullptr) {
+                        // Ingredient exists in inventory - calculate availability status
+                        int available = foodItem->quantity;
+                        string status = (available >= quantity) ? "Sufficient" : "Insufficient";
+                        
+                        // Display formatted ingredient details with availability
+                        cout << left << setw(10) << foodId 
+                             << setw(30) << foodItem->name 
+                             << setw(10) << quantity 
+                             << setw(15) << available 
+                             << setw(15) << status << endl;
+                        
+                        // Clean up dynamically allocated memory
+                        delete foodItem;
+                    } else {
+                        // Ingredient not found in inventory - mark as missing
+                        cout << left << setw(10) << foodId 
+                             << setw(30) << "Not found" 
+                             << setw(10) << quantity 
+                             << setw(15) << "0" 
+                             << setw(15) << "Missing" << endl;
+                    }
+                }
+            }
+        } else {
+            // Handle the case when menu item has no ingredients defined
+            cout << "\nNo ingredients specified for this menu item." << endl;
+        }
+        
+        // Clean up dynamically allocated memory
+        delete item;
+    }
         
 };
 
