@@ -2842,6 +2842,64 @@ class RestaurantMenuSystem {
         // Clean up dynamically allocated memory
         delete item;
     }
+
+        /**
+     * Verifies if all ingredients for a menu item are available in sufficient quantities
+     * This method performs pre-checks before menu item preparation
+     * Parameters: id - The unique identifier of the menu item to check
+     * Parameters: inventory - Reference to the inventory system
+     * Return: true if all ingredients are available in sufficient quantities, false otherwise
+     */
+    bool checkIngredientsAvailability(const string& id, RestaurantInventorySystem& inventory) {
+        // Ensure inventory data is up-to-date
+        inventory.saveToFile("food_items.txt");
+        
+        // Retrieve the menu item by its ID
+        MenuItem* item = findMenuItem(id);
+        
+        // Validate if the item exists in the menu
+        if (item == nullptr) {
+            cout << "Menu item with ID " << id << " not found." << endl;
+            return false;
+        }
+        
+        // Flag to track overall availability status
+        bool allAvailable = true;
+        
+        // Iterate through each ingredient and check its availability
+        for (int i = 0; i < item->ingredientCount; i++) {
+            // Parse the ingredient string format "foodId:quantity"
+            size_t colonPos = item->ingredients[i].find(":");
+            if (colonPos != string::npos) {
+                // Extract food ID and required quantity
+                string foodId = item->ingredients[i].substr(0, colonPos);
+                int quantity = stoi(item->ingredients[i].substr(colonPos + 1));
+                
+                // Query the inventory system for real-time information about this ingredient
+                FoodItem* foodItem = inventory.findFoodItem(foodId);
+                
+                // Check if the ingredient exists and is available in sufficient quantity
+                if (foodItem == nullptr || foodItem->quantity < quantity) {
+                    allAvailable = false;
+                    // Provide detailed feedback about the missing or insufficient ingredient
+                    if (foodItem == nullptr) {
+                        cout << "Missing ingredient: " << foodId << endl;
+                    } else {
+                        cout << "Insufficient quantity of " << foodItem->name 
+                             << " (ID: " << foodId << "). Required: " << quantity 
+                             << ", Available: " << foodItem->quantity << endl;
+                    }
+                }
+                
+                // Clean up dynamically allocated memory
+                delete foodItem;
+            }
+        }
+        
+        // Clean up dynamically allocated memory
+        delete item;
+        return allAvailable;
+    }
         
 };
 
