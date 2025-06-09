@@ -2900,6 +2900,64 @@ class RestaurantMenuSystem {
         delete item;
         return allAvailable;
     }
+
+    /**
+     * Prepares a menu item by consuming all required ingredients from inventory
+     * This method performs a transaction that updates inventory quantities
+     * Parameters: id - The unique identifier of the menu item to prepare
+     * Parameters: inventory - Reference to the inventory system for ingredient consumption
+     * Parameters: purpose - Description of why the item is being prepared (for logging)
+     * Return: true if preparation was successful, false otherwise
+     */
+    bool prepareMenuItem(const string& id, RestaurantInventorySystem& inventory, const string& purpose = "Menu Order") {
+        // Ensure inventory data is up-to-date
+        inventory.saveToFile("food_items.txt");
+        
+        // First perform a pre-check to ensure all ingredients are available
+        if (!checkIngredientsAvailability(id, inventory)) {
+            cout << "Cannot prepare menu item due to missing or insufficient ingredients." << endl;
+            return false;
+        }
+        
+        // Retrieve the menu item by its ID
+        MenuItem* item = findMenuItem(id);
+        if (item == nullptr) {
+            return false;
+        }
+        
+        // Transaction flag to track overall success
+        bool success = true;
+        
+        // Iterate through each ingredient and consume the required quantity
+        for (int i = 0; i < item->ingredientCount; i++) {
+            // Parse the ingredient string format "foodId:quantity"
+            size_t colonPos = item->ingredients[i].find(":");
+            if (colonPos != string::npos) {
+                // Extract food ID and required quantity
+                string foodId = item->ingredients[i].substr(0, colonPos);
+                int quantity = stoi(item->ingredients[i].substr(colonPos + 1));
+                
+                // Consume the ingredient from inventory
+                if (!inventory.useFoodItem(foodId, quantity)) {
+                    success = false;
+                } else {
+                    // Log the ingredient usage with meaningful context
+                    inventory.logItemUsage(foodId, quantity, purpose + ": " + item->name);
+                }
+            }
+        }
+        
+        // Provide feedback on the preparation outcome
+        if (success) {
+            cout << "Successfully prepared " << item->name << endl;
+        } else {
+            cout << "Error occurred while preparing " << item->name << endl;
+        }
+        
+        // Clean up dynamically allocated memory
+        delete item;
+        return success;
+    }
         
 };
 
