@@ -3208,6 +3208,57 @@ public:
         return result;
     }
 
+    /**
+     * Optimized search implementation that displays menu item details using interpolation search
+     * This method provides a more efficient alternative to linear search for large datasets
+     * Parameters: id - The unique identifier of the menu item to search for
+     */
+    void searchByIdOptimized(const string& id) {
+        // Apply the optimized search algorithm to find the menu item
+        MenuItem* item = findMenuItemById(id);
+        
+        // Format and display results in a tabular format
+        RestaurantInventorySystem::printHeader("Menu Item Search Result");
+        cout << left << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Price" 
+             << setw(20) << "Category" 
+             << setw(30) << "Description" << endl;
+        RestaurantInventorySystem::printFooter();
+        
+        // Display item details if found, otherwise show not found message
+        if (item != nullptr) {
+            // Display the basic menu item information in a formatted row
+            cout << left << setw(10) << item->id 
+                 << setw(30) << item->name 
+                 << setw(10) << fixed << setprecision(2) << item->price
+                 << setw(20) << item->category
+                 << setw(30) << item->description << endl;
+                 
+            // Display ingredients section if the menu item has ingredients
+            if (item->ingredientCount > 0) {
+                cout << "\nIngredients Required:\n";
+                cout << left << setw(15) << "Food ID" << setw(10) << "Quantity" << endl;
+                cout << string(25, '-') << endl;
+                
+                // Parse and display each ingredient in the menu item
+                for (int i = 0; i < item->ingredientCount; i++) {
+                    // Extract the food ID and quantity from the ingredient string
+                    size_t colonPos = item->ingredients[i].find(":");
+                    if (colonPos != string::npos) {
+                        string foodId = item->ingredients[i].substr(0, colonPos);
+                        string quantity = item->ingredients[i].substr(colonPos + 1);
+                        cout << left << setw(15) << foodId << setw(10) << quantity << endl;
+                    }
+                }
+            }
+            
+            // Prevent memory leaks by releasing dynamically allocated memory
+            delete item;
+        } else {
+            cout << "Menu item with ID " << id << " not found." << endl;
+        }
+    }
 
 
 };
