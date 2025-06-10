@@ -3156,6 +3156,60 @@ public:
         return results;
     }
 
+    // Finds a menu item by its ID using Interpolation Search when possible
+    // This method is optimized for performance when searching in a sorted array
+    // Parameters: id - the ID to search for
+    // Returns: pointer to a copy of the found item or nullptr if not found
+    // Note: Caller is responsible for deleting the returned pointer
+    MenuItem* findMenuItemById(const string& id) const {
+        // First check if we have items to search
+        if (this->itemCount == 0) {
+            return nullptr;
+        }
+        
+        // Get all items as an array
+        MenuItem* items = getAllItems();
+        if (items == nullptr) {
+            return nullptr;
+        }
+        
+        // Create a copy of items that we can sort without affecting original data
+        MenuItem* sortedItems = new MenuItem[this->itemCount];
+        for (int i = 0; i < this->itemCount; i++) {
+            sortedItems[i] = items[i];
+        }
+        
+        // Sort the copy by ID to enable interpolation search
+        // Using bubble sort for simplicity - could be optimized with quicksort for larger datasets
+        for (int i = 0; i < this->itemCount - 1; i++) {
+            for (int j = 0; j < this->itemCount - i - 1; j++) {
+                if (sortedItems[j].id > sortedItems[j + 1].id) {
+                    // Swap elements using copy constructor and assignment operator
+                    MenuItem temp = sortedItems[j];
+                    sortedItems[j] = sortedItems[j + 1];
+                    sortedItems[j + 1] = temp;
+                }
+            }
+        }
+        
+        // Apply interpolation search on the sorted array
+        int position = interpolationSearchMenuItems(sortedItems, this->itemCount, id);
+        
+        MenuItem* result = nullptr;
+        if (position != -1) {
+            // Found the item, create a copy to return
+            result = new MenuItem(sortedItems[position]);
+        }
+        
+        // Clean up temporary arrays to prevent memory leaks
+        delete[] items;
+        delete[] sortedItems;
+        
+        return result;
+    }
+
+
+
 };
 
 /**
