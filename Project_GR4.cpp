@@ -3111,7 +3111,50 @@ public:
         return results;
     }
 
-
+    /**
+     * Filters menu items by category
+     * This method is useful for menu organization and filtered views
+     * Parameters: category - The category to filter by (exact match)
+     * Parameters: resultCount - Output parameter that will contain the number of matches found
+     * Return: Dynamically allocated array of matching menu item IDs (caller must delete)
+     */
+    string* getMenuItemsByCategory(const string& category, int& resultCount) {
+        // Get all menu items for filtering
+        MenuItem* allItems = getAllItems();
+        if (allItems == nullptr) {
+            resultCount = 0;
+            return nullptr;
+        }
+        
+        // First pass: count matching items to allocate array of correct size
+        resultCount = 0;
+        for (int i = 0; i < itemCount; i++) {
+            // Exact category match (case sensitive)
+            if (allItems[i].category == category) {
+                resultCount++;
+            }
+        }
+        
+        // Exit early if no matches found
+        if (resultCount == 0) {
+            delete[] allItems;
+            return nullptr;
+        }
+        
+        // Second pass: populate array with matching IDs
+        string* results = new string[resultCount];
+        int index = 0;
+        
+        for (int i = 0; i < itemCount; i++) {
+            if (allItems[i].category == category) {
+                results[index++] = allItems[i].id;
+            }
+        }
+        
+        // Clean up temporary array
+        delete[] allItems;
+        return results;
+    }
 
 };
 
