@@ -3320,6 +3320,63 @@ public:
         }
     }
 
+    /**
+     * Searches for menu items within a specific price range
+     * This method facilitates price-based filtering of menu items
+     * Parameters: minPrice - The minimum price in the range (inclusive)
+     * Parameters: maxPrice - The maximum price in the range (inclusive)
+     */
+    void searchByPriceRange(double minPrice, double maxPrice) {
+        // Ensure minimum is less than maximum by swapping if necessary
+        if (minPrice > maxPrice) {
+            swap(minPrice, maxPrice);
+        }
+        
+        // Format and display results in a tabular format
+        RestaurantInventorySystem::printHeader("Menu Items Search Result - Price Range $" + 
+                                           to_string(minPrice) + " to $" + to_string(maxPrice));
+        cout << left << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Price" 
+             << setw(20) << "Category" 
+             << setw(30) << "Description" << endl;
+        RestaurantInventorySystem::printFooter();
+        
+        // Get all menu items from the linked list
+        MenuItem* items = getAllItems();
+        int matchCount = 0;
+        
+        // Perform the search and display matching items
+        if (this->itemCount > 0 && items != nullptr) {
+            for (int i = 0; i < this->itemCount; i++) {
+                // Check if the current item's price falls within the specified range
+                if (items[i].price >= minPrice && items[i].price <= maxPrice) {
+                    // Display the matching menu item in a formatted row
+                    cout << left << setw(10) << items[i].id 
+                         << setw(30) << items[i].name 
+                         << setw(10) << fixed << setprecision(2) << items[i].price
+                         << setw(20) << items[i].category
+                         << setw(30) << items[i].description << endl;
+                    matchCount++;
+                }
+            }
+            
+            // Display a summary of search results
+            if (matchCount == 0) {
+                cout << "No menu items found in the price range $" << fixed << setprecision(2) 
+                     << minPrice << " to $" << maxPrice << "." << endl;
+            } else {
+                cout << "\nFound " << matchCount << " menu item(s) in the price range $" 
+                     << fixed << setprecision(2) << minPrice << " to $" << maxPrice << "." << endl;
+            }
+            
+            // Prevent memory leaks by releasing dynamically allocated memory
+            delete[] items;
+        } else {
+            cout << "No items in the menu." << endl;
+        }
+    }
+
 
 };
 
