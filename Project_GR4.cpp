@@ -3260,6 +3260,66 @@ public:
         }
     }
 
+    /**
+     * Case-insensitive search for menu items by name (partial matching)
+     * This method provides a user-friendly search experience with fuzzy matching
+     * Parameters: searchName - The partial or complete name to search for
+     */
+    void searchByName(const string& searchName) {
+        // Convert search term to lowercase for case-insensitive comparison
+        string searchLower = searchName;
+        for (size_t i = 0; i < searchLower.length(); i++) {
+            searchLower[i] = tolower(searchLower[i]);
+        }
+        
+        // Format and display results in a tabular format
+        RestaurantInventorySystem::printHeader("Menu Items Search Result - Name containing '" + searchName + "'");
+        cout << left << setw(10) << "ID" 
+             << setw(30) << "Name" 
+             << setw(10) << "Price" 
+             << setw(20) << "Category" 
+             << setw(30) << "Description" << endl;
+        RestaurantInventorySystem::printFooter();
+        
+        // Get all menu items from the linked list
+        MenuItem* items = getAllItems();
+        int matchCount = 0;
+        
+        // Perform the search and display matching items
+        if (this->itemCount > 0 && items != nullptr) {
+            for (int i = 0; i < this->itemCount; i++) {
+                // Convert current item name to lowercase for case-insensitive comparison
+                string nameLower = items[i].name;
+                for (size_t j = 0; j < nameLower.length(); j++) {
+                    nameLower[j] = tolower(nameLower[j]);
+                }
+                
+                // Check if the current item name contains the search term (partial match)
+                if (nameLower.find(searchLower) != string::npos) {
+                    // Display the matching menu item in a formatted row
+                    cout << left << setw(10) << items[i].id 
+                         << setw(30) << items[i].name 
+                         << setw(10) << fixed << setprecision(2) << items[i].price
+                         << setw(20) << items[i].category
+                         << setw(30) << items[i].description << endl;
+                    matchCount++;
+                }
+            }
+            
+            // Display a summary of search results
+            if (matchCount == 0) {
+                cout << "No menu items found containing '" << searchName << "' in the name." << endl;
+            } else {
+                cout << "\nFound " << matchCount << " menu item(s) matching the search criteria." << endl;
+            }
+            
+            // Prevent memory leaks by releasing dynamically allocated memory
+            delete[] items;
+        } else {
+            cout << "No items in the menu." << endl;
+        }
+    }
+
 
 };
 
