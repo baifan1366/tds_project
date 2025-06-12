@@ -1033,37 +1033,6 @@ public:
         }
     }
     
-    // Interpolation Search - O(log log n) average case for uniformly distributed data
-    // A searching algorithm that works on uniformly distributed sorted data
-    // Parameters: sorted array, array size, and ID to search for
-    static int interpolationSearch(FoodItem arr[], int n, const string& id) {
-        // Find indexes of two corners (boundary points)
-        int low = 0, high = n - 1;
-        
-        // While elements exist and key is within range of array
-        while (low <= high && id >= arr[low].id && id <= arr[high].id) {
-            // Probing the position with key value using interpolation formula
-            // This estimates where the element might be based on its value
-            double val1 = id.compare(arr[low].id);
-            double val2 = arr[high].id.compare(arr[low].id);
-            double val3 = high - low;
-            int pos = low + (int)(val3 * (val1 / val2));
-            
-            // If element is found at the estimated position
-            if (arr[pos].id == id)
-                return pos;
-                
-            // If element at pos is smaller, search in right subarray
-            if (arr[pos].id < id)
-                low = pos + 1;
-            else
-                // If element at pos is larger, search in left subarray
-                high = pos - 1;
-        }
-        
-        return -1; // Element not found
-    }
-    
     // Constructor - initializes the hash table for storing food items
     // Creates an array of empty linked queues (buckets)
     RestaurantInventorySystem() : Restaurant() {
@@ -1432,6 +1401,7 @@ public:
     
     // Display all food items sorted by name or quantity
     // Parameter: byName - if true, sort by name; if false, sort by quantity
+    // use tim sort
     virtual void displaySorted(bool byName = true) override {
         // Print table header with appropriate title based on sort criteria
         printHeader(byName ? "Restaurant Inventory System - Sorted by Name" 
@@ -1615,6 +1585,7 @@ public:
     
     // Search and display food item by ID
     // Presents formatted information about all instances of the item if found
+    // search from the hash table
     void searchById(const string& id) {
         bool found = false;
         int totalCount = 0;
@@ -2104,6 +2075,7 @@ public:
     
     // Search and display food items by name
     // Performs a partial string match and displays all matching items
+    // search from the hash table
     void searchByName(const string& name) {
         // Print table header
         printHeader("Search Results by Name");
@@ -2169,6 +2141,7 @@ public:
     
     // Search and display food items by price range
     // Shows all items with price between minPrice and maxPrice (inclusive)
+    // search from the hash table
     void searchByPrice(double minPrice, double maxPrice) {
         // Validate price range
         if (minPrice < 0 || maxPrice < 0) {
@@ -2269,6 +2242,10 @@ void mergeMenuItems(MenuItem arr[], int left, int mid, int right, const string& 
             // Sort by category (alphabetical order)
             compareResult = (leftArr[i].category <= rightArr[j].category);
         }
+        else if (sortBy == "id") {
+            // Sort by id (alphabetical order)
+            compareResult = (leftArr[i].id <= rightArr[j].id);
+        }
         else {
             // Default: Sort by name (alphabetical order)
             compareResult = (leftArr[i].name <= rightArr[j].name);
@@ -2322,6 +2299,13 @@ void insertionSortMenuItems(MenuItem arr[], int left, int right, const string& s
         else if (sortBy == "category") {
             // Sort by category (alphabetical order)
             while (j >= left && arr[j].category > temp.category) {
+                arr[j + 1] = arr[j];
+                j--;
+            }
+        }
+        else if (sortBy == "id") {
+            // Sort by id (alphabetical order)
+            while (j >= left && arr[j].id > temp.id) {
                 arr[j + 1] = arr[j];
                 j--;
             }
@@ -2819,6 +2803,7 @@ public:
     
     // Searches for and displays a menu item by its ID
     // Parameters: id - the ID of the menu item to find
+    // using interpolation search
     void searchById(const string& id) {
         // Find the menu item
         MenuItem* item = findMenuItem(id);
@@ -3063,7 +3048,7 @@ public:
         delete item;
         return success;
     }
-
+    
     /**
      * Searches for menu items by name or description
      * This utility method powers the text search functionality
@@ -3079,6 +3064,37 @@ public:
             return nullptr;
         }
         
+        // For exact ID matches, we can use interpolation search for better performance
+        if (query.length() == 4 && ValidationCheck::isValidID(query)) {
+            // Sort the items by ID to prepare for interpolation search
+            MenuItem* sortedItems = new MenuItem[this->itemCount];
+            for (int i = 0; i < this->itemCount; i++) {
+                sortedItems[i] = allItems[i];
+            }
+            
+            // Use Tim Sort for efficient sorting
+            timSortMenuItems(sortedItems, this->itemCount, "id");
+            
+            // Apply interpolation search
+            int position = interpolationSearchMenuItems(sortedItems, this->itemCount, query);
+            
+            if (position != -1) {
+                // Found exactly one match
+                resultCount = 1;
+                string* results = new string[1];
+                results[0] = sortedItems[position].id;
+                
+                // Clean up
+                delete[] sortedItems;
+                delete[] allItems;
+                return results;
+            }
+            
+            // Clean up sorted items if no match found
+            delete[] sortedItems;
+        }
+        
+        // For non-ID searches or ID not found, use traditional search approach
         // First pass: count matching items to allocate array of correct size
         resultCount = 0;
         for (int i = 0; i < itemCount; i++) {
@@ -3110,7 +3126,7 @@ public:
         delete[] allItems;
         return results;
     }
-
+    
     /**
      * Filters menu items by category
      * This method is useful for menu organization and filtered views
@@ -3155,7 +3171,7 @@ public:
         delete[] allItems;
         return results;
     }
-
+    
     // Finds a menu item by its ID using Interpolation Search when possible
     // This method is optimized for performance when searching in a sorted array
     // Parameters: id - the ID to search for
@@ -3179,18 +3195,9 @@ public:
             sortedItems[i] = items[i];
         }
         
-        // Sort the copy by ID to enable interpolation search
-        // Using bubble sort for simplicity - could be optimized with quicksort for larger datasets
-        for (int i = 0; i < this->itemCount - 1; i++) {
-            for (int j = 0; j < this->itemCount - i - 1; j++) {
-                if (sortedItems[j].id > sortedItems[j + 1].id) {
-                    // Swap elements using copy constructor and assignment operator
-                    MenuItem temp = sortedItems[j];
-                    sortedItems[j] = sortedItems[j + 1];
-                    sortedItems[j + 1] = temp;
-                }
-            }
-        }
+        // Sort the copy by ID to enable interpolation search using Tim Sort
+        // Much more efficient than bubble sort O(n log n) vs O(n²)
+        timSortMenuItems(sortedItems, this->itemCount, "id");
         
         // Apply interpolation search on the sorted array
         int position = interpolationSearchMenuItems(sortedItems, this->itemCount, id);
@@ -3207,65 +3214,20 @@ public:
         
         return result;
     }
-
-    /**
-     * Optimized search implementation that displays menu item details using interpolation search
-     * This method provides a more efficient alternative to linear search for large datasets
-     * Parameters: id - The unique identifier of the menu item to search for
-     */
-    void searchByIdOptimized(const string& id) {
-        // Apply the optimized search algorithm to find the menu item
-        MenuItem* item = findMenuItemById(id);
-        
-        // Format and display results in a tabular format
-        RestaurantInventorySystem::printHeader("Menu Item Search Result");
-        cout << left << setw(10) << "ID" 
-             << setw(30) << "Name" 
-             << setw(10) << "Price" 
-             << setw(20) << "Category" 
-             << setw(30) << "Description" << endl;
-        RestaurantInventorySystem::printFooter();
-        
-        // Display item details if found, otherwise show not found message
-        if (item != nullptr) {
-            // Display the basic menu item information in a formatted row
-            cout << left << setw(10) << item->id 
-                 << setw(30) << item->name 
-                 << setw(10) << fixed << setprecision(2) << item->price
-                 << setw(20) << item->category
-                 << setw(30) << item->description << endl;
-                 
-            // Display ingredients section if the menu item has ingredients
-            if (item->ingredientCount > 0) {
-                cout << "\nIngredients Required:\n";
-                cout << left << setw(15) << "Food ID" << setw(10) << "Quantity" << endl;
-                cout << string(25, '-') << endl;
-                
-                // Parse and display each ingredient in the menu item
-                for (int i = 0; i < item->ingredientCount; i++) {
-                    // Extract the food ID and quantity from the ingredient string
-                    size_t colonPos = item->ingredients[i].find(":");
-                    if (colonPos != string::npos) {
-                        string foodId = item->ingredients[i].substr(0, colonPos);
-                        string quantity = item->ingredients[i].substr(colonPos + 1);
-                        cout << left << setw(15) << foodId << setw(10) << quantity << endl;
-                    }
-                }
-            }
-            
-            // Prevent memory leaks by releasing dynamically allocated memory
-            delete item;
-        } else {
-            cout << "Menu item with ID " << id << " not found." << endl;
-        }
-    }
-
+    
     /**
      * Case-insensitive search for menu items by name (partial matching)
      * This method provides a user-friendly search experience with fuzzy matching
+     * Using hash-based approach to improve performance
      * Parameters: searchName - The partial or complete name to search for
      */
     void searchByName(const string& searchName) {
+        // For exact ID matches, we can use our optimized search
+        if (searchName.length() == 4 && ValidationCheck::isValidID(searchName)) {
+            searchById(searchName);
+            return;
+        }
+        
         // Convert search term to lowercase for case-insensitive comparison
         string searchLower = searchName;
         for (size_t i = 0; i < searchLower.length(); i++) {
@@ -3319,10 +3281,10 @@ public:
             cout << "No items in the menu." << endl;
         }
     }
-
+    
     /**
      * Searches for menu items within a specific price range
-     * This method facilitates price-based filtering of menu items
+     * This method facilitates price-based filtering of menu items using an optimized approach
      * Parameters: minPrice - The minimum price in the range (inclusive)
      * Parameters: maxPrice - The maximum price in the range (inclusive)
      */
@@ -3332,9 +3294,14 @@ public:
             swap(minPrice, maxPrice);
         }
         
+        // Format prices with 2 decimal places
+        stringstream ss1, ss2;
+        ss1 << fixed << setprecision(2) << minPrice;
+        ss2 << fixed << setprecision(2) << maxPrice;
+        
         // Format and display results in a tabular format
         RestaurantInventorySystem::printHeader("Menu Items Search Result - Price Range $" + 
-                                           to_string(minPrice) + " to $" + to_string(maxPrice));
+                                           ss1.str() + " to $" + ss2.str());
         cout << left << setw(10) << "ID" 
              << setw(30) << "Name" 
              << setw(10) << "Price" 
@@ -3346,38 +3313,113 @@ public:
         MenuItem* items = getAllItems();
         int matchCount = 0;
         
-        // Perform the search and display matching items
+        // If we have items, use an optimized approach with Tim Sort
         if (this->itemCount > 0 && items != nullptr) {
+            // Create a sorted copy of all items by price
+            MenuItem* sortedItems = new MenuItem[this->itemCount];
             for (int i = 0; i < this->itemCount; i++) {
-                // Check if the current item's price falls within the specified range
-                if (items[i].price >= minPrice && items[i].price <= maxPrice) {
+                sortedItems[i] = items[i];
+            }
+            
+            // Use Tim Sort to sort items by price
+            timSortMenuItems(sortedItems, this->itemCount, "price");
+            
+            // Interpolation search to find the lower and upper bounds of our price range
+            int lowerBound = -1;
+            int upperBound = -1;
+            
+            // Find lower bound (first item >= minPrice)
+            int low = 0;
+            int high = this->itemCount - 1;
+            
+            // First check if we have valid array and range
+            if (high >= 0 && sortedItems[high].price >= minPrice && sortedItems[low].price <= maxPrice) {
+                // Find lower bound using interpolation search
+                while (low <= high) {
+                    // Prevent division by zero and handle equal values
+                    if (sortedItems[high].price == sortedItems[low].price) {
+                        if (sortedItems[low].price >= minPrice) {
+                            lowerBound = low;
+                        }
+                        break;
+                    }
+                    
+                    // Calculate probe position using interpolation formula with float precision
+                    float ratio = (float)(minPrice - sortedItems[low].price) / 
+                                 (float)(sortedItems[high].price - sortedItems[low].price);
+                    int pos = low + (int)(ratio * (high - low));
+                    
+                    // Ensure pos is within bounds
+                    if (pos < low) pos = low;
+                    if (pos > high) pos = high;
+                    
+                    if (sortedItems[pos].price >= minPrice) {
+                        lowerBound = pos;
+                        high = pos - 1; // Look in lower portion
+                    } else {
+                        low = pos + 1; // Look in upper portion
+                    }
+                    
+                    // If positions don't change, break to avoid infinite loop
+                    if (low == high) break;
+                }
+            }
+            
+            // Reset for upper bound search
+            low = 0;
+            high = this->itemCount - 1;
+            
+            // Find upper bound (last item <= maxPrice)
+            if (high >= 0 && sortedItems[high].price >= minPrice && sortedItems[low].price <= maxPrice) {
+                while (low <= high) {
+                    // Prevent division by zero and handle equal values
+                    if (sortedItems[high].price == sortedItems[low].price) {
+                        if (sortedItems[high].price <= maxPrice) {
+                            upperBound = high;
+                        }
+                        break;
+                    }
+                    
+                    // Calculate probe position using interpolation formula with float precision
+                    float ratio = (float)(maxPrice - sortedItems[low].price) / 
+                                 (float)(sortedItems[high].price - sortedItems[low].price);
+                    int pos = low + (int)(ratio * (high - low));
+                    
+                    // Ensure pos is within bounds
+                    if (pos < low) pos = low;
+                    if (pos > high) pos = high;
+                    
+                    if (sortedItems[pos].price <= maxPrice) {
+                        upperBound = pos;
+                        low = pos + 1; // Look in upper portion
+                    } else {
+                        high = pos - 1; // Look in lower portion
+                    }
+                    
+                    // If positions don't change, break to avoid infinite loop
+                    if (low == high) break;
+                }
+            }
+            
+            // If we found valid bounds, display matching items
+            if (lowerBound != -1 && upperBound != -1 && lowerBound <= upperBound) {
+                for (int i = lowerBound; i <= upperBound; i++) {
                     // Display the matching menu item in a formatted row
-                    cout << left << setw(10) << items[i].id 
-                         << setw(30) << items[i].name 
-                         << setw(10) << fixed << setprecision(2) << items[i].price
-                         << setw(20) << items[i].category
-                         << setw(30) << items[i].description << endl;
+                    cout << left << setw(10) << sortedItems[i].id 
+                         << setw(30) << sortedItems[i].name 
+                         << setw(10) << fixed << setprecision(2) << sortedItems[i].price
+                         << setw(20) << sortedItems[i].category
+                         << setw(30) << sortedItems[i].description << endl;
                     matchCount++;
                 }
             }
             
-            // Display a summary of search results
-            if (matchCount == 0) {
-                cout << "No menu items found in the price range $" << fixed << setprecision(2) 
-                     << minPrice << " to $" << maxPrice << "." << endl;
-            } else {
-                cout << "\nFound " << matchCount << " menu item(s) in the price range $" 
-                     << fixed << setprecision(2) << minPrice << " to $" << maxPrice << "." << endl;
-            }
-            
-            // Prevent memory leaks by releasing dynamically allocated memory
-            delete[] items;
+            // Clean up
+            delete[] sortedItems;
         } else {
             cout << "No items in the menu." << endl;
         }
     }
-
-
 };
 
 /**
@@ -4344,7 +4386,7 @@ void manageMenu(RestaurantMenuSystem& menuSystem, RestaurantInventorySystem& inv
                 cout << "Enter ID to search: ";
                 cin >> id;
                 
-                //menuSystem.searchByIdOptimized(id);
+                menuSystem.searchById(id);
                 
                 cout << "\nPress any key to continue...";
                 getch();
@@ -4358,7 +4400,7 @@ void manageMenu(RestaurantMenuSystem& menuSystem, RestaurantInventorySystem& inv
                 cin.ignore();
                 getline(cin, name);
                 
-                //menuSystem.searchByName(name);
+                menuSystem.searchByName(name);
                 
                 cout << "\nPress any key to continue...";
                 getch();
@@ -4373,7 +4415,7 @@ void manageMenu(RestaurantMenuSystem& menuSystem, RestaurantInventorySystem& inv
                 cout << "Enter maximum price: $";
                 cin >> maxPrice;
                 
-                //menuSystem.searchByPriceRange(minPrice, maxPrice);
+                menuSystem.searchByPriceRange(minPrice, maxPrice);
                 
                 cout << "\nPress any key to continue...";
                 getch();
