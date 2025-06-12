@@ -1574,7 +1574,7 @@ public:
                     }
                 }
             }
-        } catch (const std::bad_alloc&) {
+        } catch (const bad_alloc&) {
             // Handle memory allocation failure
             cout << "Memory allocation failed in getAllItems()" << endl;
             return nullptr;
@@ -1889,11 +1889,11 @@ public:
             cout << "Successfully used " << amount << " units of " << itemName << ". Remaining: " << (totalQuantity - amount) << endl;
             return true;
 
-        } catch (const std::bad_alloc& e) {
+        } catch (const bad_alloc& e) {
             // Handle memory allocation errors
             cout << "Memory allocation error in useFoodItem: " << e.what() << endl;
             return false;
-        } catch (const std::exception& e) {
+        } catch (const exception& e) {
             // Handle standard exceptions
             cout << "Error in useFoodItem: " << e.what() << endl;
             return false;
@@ -1942,7 +1942,7 @@ public:
             
             // Clean up the dynamically allocated item
             delete item;
-        } catch (const std::exception& e) {
+        } catch (const exception& e) {
             // Handle standard exceptions
             cout << "Error in logItemUsage: " << e.what() << endl;
         } catch (...) {
@@ -4168,10 +4168,10 @@ void manageInventory(RestaurantInventorySystem& inventory) {
                                 cout << "Warning: Failed to save changes to file." << endl;
                             }
                         }
-                    } catch (const std::bad_alloc& e) {
+                    } catch (const bad_alloc& e) {
                         cout << "\nMemory allocation error: " << e.what() << endl;
                         cout << "Please try again with a smaller amount or restart the application." << endl;
-                    } catch (const std::exception& e) {
+                    } catch (const exception& e) {
                         cout << "\nError: " << e.what() << endl;
                     } catch (...) {
                         cout << "\nUnexpected error occurred." << endl;
@@ -4330,7 +4330,7 @@ void manageMenu(RestaurantMenuSystem& menuSystem, RestaurantInventorySystem& inv
         
         // Search options - Ways to find specific menu items
         cout << "\n-- Search Options --" << endl; 
-        cout << "5. Search By ID (Optimized)" << endl;
+        cout << "5. Search By ID" << endl;
         cout << "6. Search By Name" << endl;
         cout << "7. Search By Price Range" << endl;
         
