@@ -2206,6 +2206,183 @@ public:
                  << fixed << setprecision(2) << minPrice << " - " << maxPrice << "." << endl;
         }
     }
+    
+    // Remove a portion of food items from a specified bucket
+    bool removeFoodItemsPortion(int bucketIndex) {
+        try {
+            if (bucketIndex < 0 || bucketIndex >= TABLE_SIZE) {
+                cout << "Invalid bucket index!" << endl;
+                return false;
+            }
+            
+            if (hashTable[bucketIndex].isEmpty()) {
+                cout << "The bucket is empty!" << endl;
+                return false;
+            }
+            
+            // Display all items in this bucket
+            cout << "\n==== Food items in bucket #" << bucketIndex << " ====" << endl;
+            displayQueue(bucketIndex);
+            
+            // Get the ID to remove
+            string id;
+            cout << "\nEnter the food ID to remove: ";
+            cin >> id;
+            
+            // Ensure this bucket has matching items
+            bool hasMatchingItems = false;
+            ADTLinkedQueue tempQueue = hashTable[bucketIndex];
+            int size = tempQueue.getSize();
+            FoodItem* items = tempQueue.toArray();
+            
+            // Check if each item matches
+            for (int j = 0; j < size; j++) {
+                if (items[j].id == id) {
+                    hasMatchingItems = true;
+                    break;
+                }
+            }
+            
+            // Release allocated memory
+            delete[] items;
+            
+            if (!hasMatchingItems) {
+                cout << "There is no food item with ID " << id << " in this bucket!" << endl;
+                return false;
+            }
+            
+            // Ask for the amount to remove
+            int amountToRemove;
+            cout << "Enter the amount to remove: ";
+            cin >> amountToRemove;
+            
+            if (amountToRemove <= 0) {
+                cout << "The amount to remove must be positive!" << endl;
+                return false;
+            }
+            
+            // Locate the item and reduce its quantity (or completely remove)
+            ADTLinkedQueue newQueue;
+            int remainingToRemove = amountToRemove;
+            bool anyRemoved = false;
+            
+            while (!hashTable[bucketIndex].isEmpty()) {
+                FoodItem item = hashTable[bucketIndex].dequeue();
+                
+                if (item.id == id && remainingToRemove > 0) {
+                    // If the current item quantity exceeds the amount to remove, only reduce its quantity
+                    if (item.quantity > remainingToRemove) {
+                        item.quantity -= remainingToRemove;
+                        cout << "Removed " << remainingToRemove << " units from " << item.name << " (ID: " << item.id 
+                             << "). Remaining: " 
+                             << item.quantity << endl;
+                        remainingToRemove = 0;
+                        newQueue.enqueue(item);
+                    } 
+                    // Otherwise, completely remove the current item
+                    else {
+                        remainingToRemove -= item.quantity;
+                        cout << "Removed " << item.quantity << " units from " << item.name << " (ID: " << item.id << ")." << endl;
+                        
+                        // Check if there are other instances with the same ID
+                        bool otherInstancesExist = false;
+                        for (int i = 0; i < TABLE_SIZE; i++) {
+                            if (i == bucketIndex) continue; // Skip current bucket
+                            
+                            ADTLinkedQueue checkQueue = hashTable[i];
+                            int checkSize = checkQueue.getSize();
+                            FoodItem* checkItems = checkQueue.toArray();
+                            
+                            for (int j = 0; j < checkSize; j++) {
+                                if (checkItems[j].id == id) {
+                                    otherInstancesExist = true;
+                                    break;
+                                }
+                            }
+                            
+                            delete[] checkItems;
+                            if (otherInstancesExist) break;
+                        }
+                        
+                        // If no other instances, reduce total item count
+                        if (!otherInstancesExist) {
+                            this->itemCount--;
+                        }
+                    }
+                    anyRemoved = true;
+                } else {
+                    // Not the target item or no more removal needed, keep as is
+                    newQueue.enqueue(item);
+                }
+            }
+            
+            // Replace the bucket with the updated queue
+            hashTable[bucketIndex] = newQueue;
+            
+            if (anyRemoved) {
+                // Save changes to file
+                this->saveToFile("food_items.txt");
+                
+                if (remainingToRemove > 0) {
+                    cout << "\nNote: Only " << (amountToRemove - remainingToRemove) 
+                         << " units can be removed, " << remainingToRemove 
+                         << " units cannot be found in stock." << endl;
+                }
+                return true;
+            } else {
+                cout << "No item found to remove!" << endl;
+                return false;
+            }
+            
+        } catch (const bad_alloc& e) {
+            // Handle memory allocation error
+            cout << "Memory allocation error: " << e.what() << endl;
+            return false;
+        } catch (const exception& e) {
+            // Handle standard exception
+            cout << "Error: " << e.what() << endl;
+            return false;
+        } catch (...) {
+            // Handle other unexpected errors
+            cout << "Unknown error" << endl;
+            return false;
+        }
+    }
+    
+    // Remove the entire bucket's contents
+    bool removeBucket(int bucketIndex) {
+        if (bucketIndex < 0 || bucketIndex >= TABLE_SIZE) {
+            cout << "Invalid bucket index!" << endl;
+            return false;
+        }
+        
+        if (hashTable[bucketIndex].isEmpty()) {
+            cout << "The bucket is empty!" << endl;
+            return false;
+        }
+        
+        // Display the items to be removed
+        cout << "\n==== Bucket #" << bucketIndex << " will be emptied ====" << endl;
+        displayQueue(bucketIndex);
+        
+        char confirm;
+        cout << "\nConfirm removing the entire bucket? (Y/N): ";
+        cin >> confirm;
+        
+        if (toupper(confirm) == 'Y') {
+            // Empty the bucket of all items
+            while (!hashTable[bucketIndex].isEmpty()) {
+                FoodItem item = hashTable[bucketIndex].dequeue();
+                itemCount--;
+                cout << "Removed: " << item.name << " (ID: " << item.id << ")" << endl;
+            }
+            cout << "\nBucket successfully emptied!" << endl;
+            return true;
+        }
+        
+        cout << "Operation cancelled." << endl;
+        return false;
+    }
 };
 
 // Utility sorting and searching functions for restaurant menu system
@@ -3928,19 +4105,21 @@ void manageInventory(RestaurantInventorySystem& inventory) {
         cout << "4. Sort By Name" << endl;
         cout << "5. Sort By Quantity" << endl;
         cout << "6. Use Food Item / Prepare Menu Item" << endl;
+        cout << "7. Remove Food Item" << endl;
+        
         // Update search options section
         // Multiple search methods to find items efficiently
         cout << "\n-- Search Options --" << endl;
-        cout << "7. Search By ID" << endl;
-        cout << "8. Search By Name" << endl;
-        cout << "9. Search By Price Range" << endl;
+        cout << "8. Search By ID" << endl;
+        cout << "9. Search By Name" << endl;
+        cout << "10. Search By Price Range" << endl;
         
         // Additional operations for advanced inventory management
         cout << "\n-- Other Options --" << endl;
-        cout << "10. Save Sorted Data" << endl;
-        cout << "11. Display Queue Structure" << endl;
-        cout << "12. Display Specific Queue" << endl;
-        cout << "13. Display Usage History" << endl;
+        cout << "11. Save Sorted Data" << endl;
+        cout << "12. Display Queue Structure" << endl;
+        cout << "13. Display Specific Queue" << endl;
+        cout << "14. Display Usage History" << endl;
         
         cout << "0. Back to Main Menu" << endl;
         cout << "Enter your choice: ";
@@ -4215,6 +4394,47 @@ void manageInventory(RestaurantInventorySystem& inventory) {
                 break;
             }
             case 7: {
+                // Remove food items
+                RestaurantInventorySystem::clearScreen();
+                char choice;
+                
+                cout << "==== Remove Food Item ====" << endl;
+                cout << "1. Remove a portion of the food items" << endl;
+                cout << "2. Remove whole bucket" << endl;
+                cout << "Enter your choice (1-2): ";
+                cin >> choice;
+                
+                if (choice == '1') {
+                    // Remove food items
+                    int bucketIndex;
+                    cout << "\nEnter the bucket index to view (0-" << inventory.MAX_BUCKETS-1 << "): ";
+                    cin >> bucketIndex;
+                    
+                    if (bucketIndex >= 0 && bucketIndex < inventory.MAX_BUCKETS) {
+                        inventory.removeFoodItemsPortion(bucketIndex);
+                    } else {
+                        cout << "\nInvalid bucket index!" << endl;
+                    }
+                } else if (choice == '2') {
+                    // Remove whole bucket
+                    int bucketIndex;
+                    cout << "\nEnter the bucket index to empty (0-" << inventory.MAX_BUCKETS-1 << "): ";
+                    cin >> bucketIndex;
+                    
+                    if (bucketIndex >= 0 && bucketIndex < inventory.MAX_BUCKETS) {
+                        inventory.removeBucket(bucketIndex);
+                    } else {
+                        cout << "\nInvalid bucket index!" << endl;
+                    }
+                } else {
+                    cout << "\nInvalid choice." << endl;
+                }
+                
+                cout << "\nPress any key to continue...";
+                getch();
+                break;
+            }
+            case 8: {
                 // Search for a food item by its unique ID
                 RestaurantInventorySystem::clearScreen();
                 string id;
@@ -4227,7 +4447,7 @@ void manageInventory(RestaurantInventorySystem& inventory) {
                 getch();
                 break;
             }
-            case 8: {
+            case 9: {
                 // Search for food items by name (partial match)
                 RestaurantInventorySystem::clearScreen();
                 string name;
@@ -4242,7 +4462,7 @@ void manageInventory(RestaurantInventorySystem& inventory) {
                 getch();
                 break;
             }
-            case 9: {
+            case 10: {
                 // Search for food items within a price range
                 RestaurantInventorySystem::clearScreen();
                 double minPrice, maxPrice;
@@ -4257,7 +4477,7 @@ void manageInventory(RestaurantInventorySystem& inventory) {
                 getch();
                 break;
             }
-            case 10: {
+            case 11: {
                 // Save current inventory data to file (with sorting option)
                 RestaurantInventorySystem::clearScreen();
                 inventory.saveToFile("sorted_information.txt", true);
@@ -4265,7 +4485,7 @@ void manageInventory(RestaurantInventorySystem& inventory) {
                 getch();
                 break;
             }
-            case 11: {
+            case 12: {
                 // Display queue data structure with all buckets
                 RestaurantInventorySystem::clearScreen();
                 inventory.displayAllQueues();
@@ -4273,7 +4493,7 @@ void manageInventory(RestaurantInventorySystem& inventory) {
                 getch();
                 break;
             }
-            case 12: {
+            case 13: {
                 // Display a specific hash bucket (queue)
                 RestaurantInventorySystem::clearScreen();
                 int bucketIndex;
@@ -4287,7 +4507,7 @@ void manageInventory(RestaurantInventorySystem& inventory) {
                 getch();
                 break;
             }
-            case 13: {
+            case 14: {
                 // Display history of inventory usage
                 RestaurantInventorySystem::clearScreen();
                 inventory.displayUsageHistory();
